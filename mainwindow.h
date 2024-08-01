@@ -16,6 +16,8 @@ public:
 
 private slots:
     void onClear();
+    void newFile();
+    void openFile();
     void onSave();
     void onSaveAs();
     void onLoad();
@@ -48,6 +50,9 @@ private:
     QMenu *editMenu;
     QMenu *viewMenu;
     QMenu *resultMenu;
+    QAction *exportAction;
+    QAction *newAction;
+    QAction *openAction;
     QAction *saveAction;
     QAction *saveAsAction;
     QAction *loadAction;

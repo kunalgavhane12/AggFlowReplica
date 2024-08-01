@@ -5,10 +5,11 @@
 #include <QLabel>
 #include <QGraphicsProxyWidget>
 #include <QVBoxLayout>
+#include <QBuffer>
 
 namespace
 {
-    const char* DEFAULT_TEXT = "Text";
+const char* DEFAULT_TEXT = "Text";
 }
 
 int CustomPixmapItem::GlobalItemId = 0;
@@ -27,7 +28,7 @@ CustomPixmapItem::CustomPixmapItem(const QPixmap &pixmap)
 {
     ItemId = ++GlobalItemId;
     setFlag(ItemIsMovable);
-//    setFlag(ItemIsSelectable);
+    //    setFlag(ItemIsSelectable);
     setAcceptHoverEvents(true);
 
     PixmapLabel->setPixmap(pixmap);
@@ -36,14 +37,14 @@ CustomPixmapItem::CustomPixmapItem(const QPixmap &pixmap)
 
 void CustomPixmapItem::AddEndCircles()
 {
-//  this way also we can add widget also depending on future requirement might need it so keeping commented code
-//    QGraphicsPixmapItem *pixmapItem = new QGraphicsPixmapItem(pixmap);
-//    pixmapItem->setPos(0, 0); // Position the image in the scene
+    //  this way also we can add widget also depending on future requirement might need it so keeping commented code
+    //    QGraphicsPixmapItem *pixmapItem = new QGraphicsPixmapItem(pixmap);
+    //    pixmapItem->setPos(0, 0); // Position the image in the scene
 
     // Create a QGraphicsTextItem for displaying text
-//    textItem->setDefaultTextColor(Qt::black); // Set text color
-//    textItem->setFont(QFont("Arial", 16));    // Set text font and size
-//    textItem->setPos(0, 55); // Position the text in the scene
+    //    textItem->setDefaultTextColor(Qt::black); // Set text color
+    //    textItem->setFont(QFont("Arial", 16));    // Set text font and size
+    //    textItem->setPos(0, 55); // Position the text in the scene
 
     StartCircle->setBrush(Qt::red);
     EndCircle->setBrush(Qt::blue);
@@ -68,7 +69,7 @@ void CustomPixmapItem::AddEndCircles()
     StartCircle->setPos(-EndCircle->boundingRect().width(), bdRect.height() / 2);
     EndCircle->setPos(bdRect.width(), bdRect.height() / 2);
 
-//    the circles opacity and colour i will adjust later if needed
+    //    the circles opacity and colour i will adjust later if needed
     //    EndCircle->setOpacity(0.5);
 }
 
@@ -161,6 +162,86 @@ void CustomPixmapItem::read(QDataStream &in) {
     ItemId = itemId;
     GlobalItemId = GlobalItemId > globalItemId ? GlobalItemId : globalItemId;
     ItemId = itemId;
+    SetStartConnected(isStartConn);
+    SetEndConnected(isEndConn);
+}
+
+void CustomPixmapItem::saveToXml(QXmlStreamWriter &xmlWriter) const
+{
+    xmlWriter.writeStartElement("CustomPixmapItem");
+
+    // Write position
+    QPointF position = pos();
+    xmlWriter.writeTextElement("Position", QString("%1,%2").arg(position.x()).arg(position.y()));
+
+    // Write pixmap
+    QImage image = PixmapLabel->pixmap()->toImage();
+    QByteArray imageData;
+    QBuffer buffer(&imageData);
+    buffer.open(QIODevice::WriteOnly);
+    image.save(&buffer, "PNG");
+    xmlWriter.writeTextElement("Pixmap", imageData.toBase64());
+
+    // Write text
+    QString text = TextLabel->text();
+    xmlWriter.writeTextElement("Text", text);
+
+    // Write IDs and connection states
+    xmlWriter.writeTextElement("GlobalItemId", QString::number(GlobalItemId));
+    xmlWriter.writeTextElement("ItemId", QString::number(ItemId));
+    xmlWriter.writeTextElement("IsStartConnected", QString::number(IsStartConnected));
+    xmlWriter.writeTextElement("IsEndConnected", QString::number(IsEndConnected));
+
+    xmlWriter.writeEndElement(); // CustomPixmapItem
+}
+
+void CustomPixmapItem::loadFromXml(QXmlStreamReader &xmlReader)
+{
+    QPointF position;
+    QImage image;
+    QString text;
+    int globalItemId=0;
+    int itemId=0;
+    bool isStartConn=false;
+    bool isEndConn=false;
+
+    while (!xmlReader.atEnd() && !xmlReader.hasError())
+    {
+        QXmlStreamReader::TokenType token = xmlReader.readNext();
+        if (token == QXmlStreamReader::StartElement)
+        {
+            if (xmlReader.name() == "Position")
+            {
+                QStringList coords = xmlReader.readElementText().split(",");
+                if (coords.size() == 2)
+                {
+                    position.setX(coords[0].toDouble());
+                    position.setY(coords[1].toDouble());
+                }
+            } else if (xmlReader.name() == "Pixmap") {
+                QByteArray imageData = QByteArray::fromBase64(xmlReader.readElementText().toUtf8());
+                image.loadFromData(imageData, "PNG");
+            } else if (xmlReader.name() == "Text") {
+                text = xmlReader.readElementText();
+            } else if (xmlReader.name() == "GlobalItemId") {
+                globalItemId = xmlReader.readElementText().toInt();
+            } else if (xmlReader.name() == "ItemId") {
+                itemId = xmlReader.readElementText().toInt();
+            } else if (xmlReader.name() == "IsStartConnected") {
+                isStartConn = xmlReader.readElementText().toInt();
+            } else if (xmlReader.name() == "IsEndConnected") {
+                isEndConn = xmlReader.readElementText().toInt();
+            }
+        } else if (token == QXmlStreamReader::EndElement && xmlReader.name() == "CustomPixmapItem") {
+            break;
+        }
+    }
+
+    setPos(position);
+    PixmapLabel->setPixmap(QPixmap::fromImage(image));
+    SetText(text);
+    ItemId = itemId;
+    GlobalItemId = GlobalItemId > globalItemId ? GlobalItemId : globalItemId;
     SetStartConnected(isStartConn);
     SetEndConnected(isEndConn);
 }

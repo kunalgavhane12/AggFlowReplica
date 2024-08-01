@@ -24,9 +24,9 @@ void ArrowLineItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
     // Draw the arrowhead with a solid pen
     // comment below 2 lines for solid arrowhead
     // 3rd line is for colour of arrowhead
-//    QPen arrowPen(Qt::black, lineWidth, Qt::SolidLine);
-//    painter->setPen(arrowPen);
-//    painter->setBrush(Qt::green); // Fill color for the arrowhead
+    //    QPen arrowPen(Qt::black, lineWidth, Qt::SolidLine);
+    //    painter->setPen(arrowPen);
+    //    painter->setBrush(Qt::green); // Fill color for the arrowhead
 
     QPolygonF arrowHead;
     arrowHead << line.p2() << arrowP1 << arrowP2;
@@ -59,6 +59,72 @@ void ArrowLineItem::read(QDataStream &in) {
     EndCircleItemId = itemIdEnd;
     IsEndCircleStartConnected = startCircleEndItem;
     IsEndCircleEndConnected = EndCircleEndItem;
+}
+
+void ArrowLineItem::saveToXml(QXmlStreamWriter &xmlWriter) const
+{
+    xmlWriter.writeStartElement("ArrowLineItem");
+
+    // Write the line
+    QLineF line = this->line();
+    xmlWriter.writeTextElement("line", QString("%1,%2,%3,%4").arg(line.x1()).arg(line.y1()).arg(line.x2()).arg(line.y2()));
+
+    // Write the start and end items and their connection states
+    CustomPixmapItem* startItem = dynamic_cast<CustomPixmapItem*>(StartCircle->parentItem());
+    CustomPixmapItem* endItem = dynamic_cast<CustomPixmapItem*>(EndCircle->parentItem());
+
+    if (startItem && endItem) {
+        xmlWriter.writeTextElement("StartItemId", QString::number(startItem->GetItemId()));
+        xmlWriter.writeTextElement("StartConnected", QString::number(startItem->GetStartConnected()));
+        xmlWriter.writeTextElement("EndConnected", QString::number(startItem->GetEndConnected()));
+
+        xmlWriter.writeTextElement("EndItemId", QString::number(endItem->GetItemId()));
+        xmlWriter.writeTextElement("StartConnected", QString::number(endItem->GetStartConnected()));
+        xmlWriter.writeTextElement("EndConnected", QString::number(endItem->GetEndConnected()));
+    }
+
+    xmlWriter.writeEndElement(); // ArrowLineItem
+}
+
+void ArrowLineItem::loadFromXml(QXmlStreamReader &xmlReader)
+{
+    QLineF line;
+    int startItemId=0, endItemId=0;
+    bool startConnected, endConnected;
+
+    while (!xmlReader.atEnd() && !xmlReader.hasError())
+    {
+        QXmlStreamReader::TokenType token = xmlReader.readNext();
+        if (token == QXmlStreamReader::StartElement)
+        {
+            if (xmlReader.name() == "line")
+            {
+                QStringList points = xmlReader.readElementText().split(",");
+                if (points.size() == 4)
+                {
+                    line.setP1(QPointF(points[0].toDouble(), points[1].toDouble()));
+                    line.setP2(QPointF(points[2].toDouble(), points[3].toDouble()));
+                }
+            } else if (xmlReader.name() == "StartItemId") {
+                startItemId = xmlReader.readElementText().toInt();
+            } else if (xmlReader.name() == "EndItemId") {
+                endItemId = xmlReader.readElementText().toInt();
+            }else if (xmlReader.name() == "StartConnected") {
+                startConnected = xmlReader.readElementText().toInt();
+            } else if (xmlReader.name() == "EndConnected") {
+                endConnected = xmlReader.readElementText().toInt();
+            }
+        } else if (token == QXmlStreamReader::EndElement && xmlReader.name() == "ArrowLineItem") {
+            break;
+        }
+    }
+    setLine(line);
+    StartCircleItemId = startItemId;
+    IsStartCircleStartConnected = startConnected;
+    IsStartCircleEndConnected = endConnected;
+    EndCircleItemId = endItemId;
+    IsEndCircleStartConnected = startConnected;
+    IsEndCircleEndConnected = endConnected;
 }
 
 void ArrowLineItem::SetStartCircle(QGraphicsEllipseItem *circle)

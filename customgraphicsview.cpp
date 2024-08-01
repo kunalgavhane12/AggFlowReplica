@@ -236,7 +236,7 @@ void CustomGraphicsView::wheelEvent(QWheelEvent *event)
     {
         if(event->delta() > 0)
         {
-           scale(scalefactor,scalefactor);
+            scale(scalefactor,scalefactor);
         }
         else
         {
@@ -398,60 +398,38 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
 
 void CustomGraphicsView::saveToXml(const QString &fileName)
 {
-    QDomDocument doc;
-    QDomElement root = doc.createElement("Scene");
-    doc.appendChild(root);
-
-    QList<QGraphicsItem *> items = scene->items();
-
-    for (QGraphicsItem *item : items)
-    {
-        QDomElement element;
-
-        if (auto pixmapItem = dynamic_cast<CustomPixmapItem *>(item))
-        {
-            element = doc.createElement("CustomPixmapItem");
-            element.setAttribute("id", pixmapItem->GetItemId());
-            element.setAttribute("x", pixmapItem->pos().x());
-            element.setAttribute("y", pixmapItem->pos().y());
-
-            // Save pixmap width and height
-//            QPixmap pixmap = pixmapItem->PixmapLabel->pixmap()->scaled(pixmapItem->pixmapWidth(), pixmapItem->pixmapHeight());
-//            element.setAttribute("width", pixmap.width());
-//            element.setAttribute("height", pixmap.height());
-            // Save text
-//            element.setAttribute("text", pixmapItem->TextLabel->text());
-
-            // Save pixmap data
-            QByteArray byteArray;
-            QBuffer buffer(&byteArray);
-            buffer.open(QIODevice::WriteOnly);
-//            pixmap.save(&buffer, "PNG"); // Save pixmap to PNG format
-            buffer.close();
-            element.setAttribute("pixmapData", QString(byteArray.toBase64()));
-            root.appendChild(element);
-        }
-        else if (auto lineItem = dynamic_cast<ArrowLineItem *>(item))
-        {
-            element = doc.createElement("ArrowLineItem");
-            element.setAttribute("startX", lineItem->line().x1());
-            element.setAttribute("startY", lineItem->line().y1());
-            element.setAttribute("endX", lineItem->line().x2());
-            element.setAttribute("endY", lineItem->line().y2());
-            root.appendChild(element);
-        }
-    }
-
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly))
     {
-        qWarning() << "Could not open file for writing";
+        qWarning("Couldn't open save file.");
         return;
     }
 
-    QTextStream stream(&file);
-    stream << doc.toString();
-    file.close();
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument();
+    xmlWriter.writeStartElement("Scene");
+
+    // Serialize CustomPixmapItems
+    for (QGraphicsItem* item : scene->items())
+    {
+        if (CustomPixmapItem* pixmapItem = dynamic_cast<CustomPixmapItem*>(item))
+        {
+            pixmapItem->saveToXml(xmlWriter);
+        }
+    }
+
+    // Serialize ArrowLineItems
+    for (QGraphicsItem* item : scene->items())
+    {
+        if (ArrowLineItem* arrowItem = dynamic_cast<ArrowLineItem*>(item))
+        {
+            arrowItem->saveToXml(xmlWriter);
+        }
+    }
+
+    xmlWriter.writeEndElement(); // Scene
+    xmlWriter.writeEndDocument();
 
     QMessageBox msgBox;
     msgBox.setText("Data in Xml Saved Successfully!");
@@ -460,72 +438,44 @@ void CustomGraphicsView::saveToXml(const QString &fileName)
 
 void CustomGraphicsView::loadFromXml(const QString &fileName)
 {
-    QDomDocument doc;
     QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        qWarning() << "Could not open file for reading";
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning("Could not open file for reading");
         return;
     }
 
-    if (!doc.setContent(&file))
-    {
-        file.close();
-        qWarning() << "Failed to parse XML";
-        return;
-    }
-
-    QDomElement root = doc.documentElement();
-    QDomNodeList pixmapNodes = root.elementsByTagName("CustomPixmapItem");
-    QDomNodeList lineNodes = root.elementsByTagName("ArrowLineItem");
-
-    // Clear existing scene and connections
+    QXmlStreamReader xmlReader(&file);
     scene->clear();
     lineConnections.clear();
-    QMap<int, CustomPixmapItem*> customItems;
+
     QList<ArrowLineItem*> lineItems;
+    QMap<int, CustomPixmapItem*> customItems;
 
-    // Load pixmap items
-    for (int i = 0; i < pixmapNodes.count(); i++)
-    {
-        QDomElement element = pixmapNodes.at(i).toElement();
-        CustomPixmapItem *pixmapItem = new CustomPixmapItem(QPixmap());
+    while (!xmlReader.atEnd() && !xmlReader.hasError()) {
+        QXmlStreamReader::TokenType token = xmlReader.readNext();
 
-        // Set position
-        pixmapItem->setPos(element.attribute("x").toDouble(), element.attribute("y").toDouble());
-
-        // Load pixmap data
-        QByteArray byteArray = QByteArray::fromBase64(element.attribute("pixmapData").toUtf8());
-        QPixmap pixmap;
-        if (!pixmap.loadFromData(byteArray, "PNG"))
-        {
-            qWarning() << "Failed to load pixmap from data for item with ID:" << element.attribute("id");
-            delete pixmapItem; // Clean up the item
-            continue;
+        if (token == QXmlStreamReader::StartElement) {
+            if (xmlReader.name() == "CustomPixmapItem") {
+                CustomPixmapItem *pixmapItem = new CustomPixmapItem(QPixmap());
+                pixmapItem->loadFromXml(xmlReader);
+                pixmapItem->HideLabelIfNeeded();
+                scene->addItem(pixmapItem);
+                customItems.insert(pixmapItem->GetItemId(), pixmapItem);
+                connect(pixmapItem, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
+            } else if (xmlReader.name() == "ArrowLineItem") {
+                ArrowLineItem *lineItem = new ArrowLineItem(QLineF());
+                lineItem->loadFromXml(xmlReader);
+                scene->addItem(lineItem);
+                lineItems.append(lineItem);
+            }
         }
-//        pixmapItem->PixmapLabel = new QLabel();
-//        pixmapItem->PixmapLabel->setPixmap(pixmap);
-
-        // Set text and item ID
-        pixmapItem->SetText(element.attribute("text"));
-        pixmapItem->SetItemId(element.attribute("id").toInt());
-
-        scene->addItem(pixmapItem);
-        customItems.insert(pixmapItem->GetItemId(), pixmapItem);
-        connect(pixmapItem, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
     }
-    // Load line items
-    for (int i = 0; i < lineNodes.count(); i++)
-    {
-        QDomElement element = lineNodes.at(i).toElement();
-        ArrowLineItem *lineItem = new ArrowLineItem(QLineF(
-                                                        QPointF(element.attribute("startX").toDouble(), element.attribute("startY").toDouble()),
-                                                        QPointF(element.attribute("endX").toDouble(), element.attribute("endY").toDouble())
-                                                        ));
-        scene->addItem(lineItem);
-        lineItems.append(lineItem);
+
+    if (xmlReader.hasError()) {
+        qWarning("XML error: %s", xmlReader.errorString().toStdString().c_str());
     }
-    // Reconnect lines after all items are loaded
+
+    xmlReader.clear();
     reconnectLines(lineItems, customItems);
 }
 

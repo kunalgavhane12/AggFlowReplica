@@ -40,6 +40,11 @@ MainWindow::MainWindow(QWidget *parent)
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
     connect(runAction, &QAction::triggered, graphicsView, &CustomGraphicsView::onResult);
+
+    exportAction = new QAction("Export", this);
+    menuBar()->addAction(exportAction);
+    connect(exportAction, &QAction::triggered, this, &MainWindow::onSave);
+
     status->setText("Result : 0");
     statusBar()->addPermanentWidget(status);
 }
@@ -52,18 +57,66 @@ void MainWindow::onClear()
     statusBar()->showMessage(tr("Scene cleared"), 2000);
 }
 
+void MainWindow::newFile()
+{
+    graphicsView->ClearScene();
+    setCurrentFile(QString());
+}
+
+void MainWindow::openFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Scene Files (*.scene)"));
+    if (fileName.isEmpty())
+        return;
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::warning(this, tr("Open File"), tr("Cannot open file %1:\n%2.").arg(fileName).arg(file.errorString()));
+        return;
+    }
+
+    setCurrentFile(fileName);
+    onLoad();
+}
+
 void MainWindow::SetupUI()
 {
-    QStringList labels = {"Item 0", "Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};
+    QPainterPath path;
+    path.moveTo(200, 50);
+    path.arcTo(150, 0, 50, 50, 0, 90);
+    path.arcTo(50, 0, 50, 50, 90, 90);
+    path.arcTo(50, 50, 50, 50, 180, 90);
+    path.arcTo(150, 50, 50, 50, 270, 90);
+    path.lineTo(200, 50);
+    QPolygonF myPolygon;
+    myPolygon = path.toFillPolygon().translated(-125, -50);
+
+    QPixmap pixmap(250, 250);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setPen(QPen(Qt::black, 8));
+    painter.translate(125, 125);
+    painter.drawPolyline(myPolygon);
+
+    QStringList labels = {"Item 0", "Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7",
+                          "Item 8", "Item 9", "Item 10", "Item 11", "Item 12", "Item 13", "Item 14"};
     QList<QIcon> icons;
     icons << QIcon(":/icons/images/start_point.png")
-          << QIcon(":/icons/images/tractor_black.png")
-          << QIcon(":/icons/images/tractor_ok.png")
-          << QIcon(":/icons/images/tractor_On_Field.png")
-          << QIcon(":/icons/images/tractor_orange.png")
-          << QIcon(":/icons/images/tractor_red.png")
-          << QIcon(":/icons/images/tractor_transperant.png")
-          << QIcon(":/icons/images/tractor_yellow.png");
+          << QIcon(":/icons/images/in_line_Equipment.png")
+          << QIcon(":/icons/images/transport_Equipment.png")
+          << QIcon(":/icons/images/spiltters_and_flop_gates.png")
+          << QIcon(":/icons/images/crushing_Equipment.png")
+          << QIcon(":/icons/images/screening_Equipment.png")
+          << QIcon(":/icons/images/mobile_Equipment.png")
+          << QIcon(":/icons/images/wash_Equipment.png")
+          << QIcon(":/icons/images/inventory_(temporary storage).png")
+          << QIcon(":/icons/images/end_Products.png")
+          << QIcon(":/icons/images/clean_Water_Equipment.png")
+          << QIcon(":/icons/images/measurement_Equipment.png")
+          << QIcon(":/icons/images/power_Sources_and_Auxiliary_Equipment.png")
+          << QIcon(":/icons/images/notes_Coloring_and_Drawing.png")
+          << QIcon(pixmap);
 
     IconListModel *model = new IconListModel(this);
     model->setData(labels, icons);
@@ -93,6 +146,8 @@ void MainWindow::SetupUI()
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(newAction);
+    fileMenu->addAction(openAction);
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
     fileMenu->addSeparator();
@@ -114,6 +169,16 @@ void MainWindow::createMenus()
 
 void MainWindow::createActions()
 {
+    newAction = new QAction(tr("&New"), this);
+    newAction->setShortcuts(QKeySequence::New);
+    newAction->setStatusTip(tr("Ctrl+N"));
+    connect(newAction, SIGNAL(triggered()), this, SLOT(newFile()));
+
+    openAction = new QAction(tr("&Open"), this);
+    openAction->setShortcuts(QKeySequence::Open);
+    openAction->setStatusTip(tr("Ctrl+O"));
+    connect(openAction, SIGNAL(triggered()), this, SLOT(openFile()));
+
     saveAction = new QAction(tr("&Save"), this);
     saveAction->setShortcuts(QKeySequence::Save);
     saveAction->setStatusTip(tr("Ctrl+S"));
@@ -218,15 +283,15 @@ void MainWindow::onSaveAs()
 
 void MainWindow::onLoad()
 {
-    graphicsView->ClearScene();
-    QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
-    if (!fileName.isEmpty()) {
-        graphicsView->loadFromFile(fileName);
-    }
-//        QString file = "saveTest.xml";
-//        if (!file.isEmpty()) {
-//            graphicsView->loadFromXml(file);
+//        graphicsView->ClearScene();
+//        QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
+//        if (!fileName.isEmpty()) {
+//            graphicsView->loadFromFile(fileName);
 //        }
+    QString file = "saveTest.xml";
+    if (!file.isEmpty()) {
+        graphicsView->loadFromXml(file);
+    }
 }
 
 void MainWindow::onOldPos(QString data)

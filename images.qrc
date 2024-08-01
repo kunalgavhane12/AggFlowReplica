@@ -8,7 +8,6 @@
         <file>images/tractor_transperant.png</file>
         <file>images/tractor_yellow.png</file>
         <file>images/start_point.png</file>
-        <file>images/in_line_equipment.png</file>
         <file>images/add_file.png</file>
         <file>images/loading.png</file>
         <file>images/paste.png</file>
@@ -19,5 +18,19 @@
         <file>images/zoom_in.png</file>
         <file>images/zoom_out.png</file>
         <file>images/zoom_to_fit.PNG</file>
+        <file>images/clean_Water_Equipment.png</file>
+        <file>images/crushing_Equipment.png</file>
+        <file>images/end_Products.png</file>
+        <file>images/inventory_(temporary storage).png</file>
+        <file>images/measurement_Equipment.png</file>
+        <file>images/mobile_Equipment.png</file>
+        <file>images/notes_Coloring_and_Drawing.png</file>
+        <file>images/screening_Equipment.png</file>
+        <file>images/transport_Equipment.png</file>
+        <file>images/wash_Equipment.png</file>
+        <file>images/in_line_Equipment.png</file>
+        <file>images/power_Sources_and_Auxiliary_Equipment.png</file>
+        <file>images/spiltters_and_flop_gates.png</file>
+        <file>images/folder-open.svg</file>
     </qresource>
 </RCC>

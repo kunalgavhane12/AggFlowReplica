@@ -5,6 +5,8 @@
 #include <QPainter>
 #include <QPen>
 #include <QPointF>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 #include <cmath>
 
 class ArrowLineItem : public QGraphicsLineItem
@@ -14,13 +16,12 @@ public:
     int lineWidth;
     void write(QDataStream &out) const;
     void read(QDataStream &in);
-
+    void saveToXml(QXmlStreamWriter &xmlWriter) const;
+    void loadFromXml(QXmlStreamReader &xmlReader);
     void SetStartCircle(QGraphicsEllipseItem* circle);
     void SetEndCircle(QGraphicsEllipseItem* circle);
-
     QGraphicsEllipseItem* GetStartCircle();
     QGraphicsEllipseItem* GetEndCircle();
-
     void SetStartCircleAttributes();
     void SetEndCircleAttributes();
     int GetStartCircleItemId() const;

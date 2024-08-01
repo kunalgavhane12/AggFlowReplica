@@ -5,6 +5,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QObject>
 #include <QLabel>
+#include <QXmlStreamWriter>
 
 class CustomPixmapItem : public QObject, public QGraphicsItemGroup
 {
@@ -16,6 +17,8 @@ public:
     QString GetText() const;
     void write(QDataStream &out) const;
     void read(QDataStream &in);
+    void saveToXml(QXmlStreamWriter &xmlWriter) const;
+    void loadFromXml(QXmlStreamReader &xmlReader);
     void SetStartConnected(bool connected);
     void SetEndConnected(bool connected);
     bool GetStartConnected();
