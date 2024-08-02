@@ -236,7 +236,6 @@ void CustomPixmapItem::loadFromXml(QXmlStreamReader &xmlReader)
             break;
         }
     }
-
     setPos(position);
     PixmapLabel->setPixmap(QPixmap::fromImage(image));
     SetText(text);

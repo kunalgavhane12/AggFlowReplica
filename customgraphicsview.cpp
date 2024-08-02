@@ -268,6 +268,7 @@ void CustomGraphicsView::RemoveAllLines()
     {
         delete it.key();
     }
+
     lineConnections.clear();
 }
 
@@ -335,6 +336,7 @@ void CustomGraphicsView::onResult()
             }
         }
     }
+
     emit resultUpdated(QString::number(result));
 }
 
@@ -345,6 +347,7 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
         qWarning("Could not open file for writing");
         return;
     }
+
     QDataStream out(&file);
     // Save all CustomPixmapItems
     QList<QGraphicsItem *> items = scene->items();
@@ -357,6 +360,7 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
             lineItem->write(out);
         }
     }
+
     QMessageBox msgBox;
     msgBox.setText("Data Saved Succesfully!!!");
     msgBox.exec();
@@ -369,6 +373,7 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
         qWarning("Could not open file for reading");
         return;
     }
+
     QDataStream in(&file);
     scene->clear();
     lineConnections.clear();
@@ -393,6 +398,7 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
             lineItems.append(lineItem);
         }
     }
+
     reconnectLines(lineItems, customItems);
 }
 
@@ -482,31 +488,35 @@ void CustomGraphicsView::loadFromXml(const QString &fileName)
 void CustomGraphicsView::reconnectLines(QList<ArrowLineItem*> lineItems, QMap<int, CustomPixmapItem*> customItems)
 {
     for (ArrowLineItem* line : lineItems) {
-        if(line->GetIsStartCircleStartConnected())
-        {
-            line->SetStartCircle(customItems[line->GetStartCircleItemId()]->GetStartCircle());
-        }
+        CustomPixmapItem* startItem = customItems.value(line->GetStartCircleItemId(), nullptr);
+        CustomPixmapItem* endItem = customItems.value(line->GetEndCircleItemId(), nullptr);
 
-        if(line->GetIsStartCircleEndConnected())
+        if (startItem && endItem)
         {
-            line->SetStartCircle(customItems[line->GetStartCircleItemId()]->GetEndCircle());
-        }
+            if(line->GetIsStartCircleStartConnected())
+            {
+                line->SetStartCircle(customItems[line->GetStartCircleItemId()]->GetStartCircle());
+            }
+            if(line->GetIsStartCircleEndConnected())
+            {
+                line->SetStartCircle(customItems[line->GetStartCircleItemId()]->GetEndCircle());
+            }
+            if(line->GetIsEndCircleStartConnected())
+            {
+                line->SetEndCircle(customItems[line->GetEndCircleItemId()]->GetStartCircle());
+            }
+            else if(line->GetIsEndCircleEndConnected())
+            {
+                line->SetEndCircle(customItems[line->GetEndCircleItemId()]->GetEndCircle());
+            }
 
-        if(line->GetIsEndCircleStartConnected())
-        {
-            line->SetEndCircle(customItems[line->GetEndCircleItemId()]->GetStartCircle());
-        }
-
-        if(line->GetIsEndCircleEndConnected())
-        {
-            line->SetEndCircle(customItems[line->GetEndCircleItemId()]->GetEndCircle());
-        }
-
-        if (line->GetStartCircle() && line->GetEndCircle()) {
-            lineConnections[line].first = line->GetStartCircle();
-            lineConnections[line].second = line->GetEndCircle();
+            if (line->GetStartCircle() && line->GetEndCircle()) {
+                lineConnections[line].first = line->GetStartCircle();
+                lineConnections[line].second = line->GetEndCircle();
+            }
         }
     }
+
     updateLinePosition();
 }
 
@@ -534,9 +544,7 @@ void CustomGraphicsView::AddItemToMoveStack(QGraphicsItem* item)
     MoveCommand* command = new MoveCommand(item, itemStartPosition, item->scenePos());
     connect(command, &MoveCommand::PublishUndoData, this, &CustomGraphicsView::PublishUndoData);
     connect(command, &MoveCommand::PublishRedoData, this, &CustomGraphicsView::PublishRedoData);
-
     connect(command, &MoveCommand::NotifyUndoCompleted, this, &CustomGraphicsView::updateLinePosition);
     connect(command, &MoveCommand::NotifyRedoCompleted, this, &CustomGraphicsView::updateLinePosition);
-
     UndoStack->push(command);
 }

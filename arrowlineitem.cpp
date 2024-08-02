@@ -75,12 +75,12 @@ void ArrowLineItem::saveToXml(QXmlStreamWriter &xmlWriter) const
 
     if (startItem && endItem) {
         xmlWriter.writeTextElement("StartItemId", QString::number(startItem->GetItemId()));
-        xmlWriter.writeTextElement("StartConnected", QString::number(startItem->GetStartConnected()));
-        xmlWriter.writeTextElement("EndConnected", QString::number(startItem->GetEndConnected()));
+        xmlWriter.writeTextElement("StartCircleStartConnected", QString::number(startItem->GetStartConnected()));
+        xmlWriter.writeTextElement("StartCircleEndConnected", QString::number(startItem->GetEndConnected()));
 
         xmlWriter.writeTextElement("EndItemId", QString::number(endItem->GetItemId()));
-        xmlWriter.writeTextElement("StartConnected", QString::number(endItem->GetStartConnected()));
-        xmlWriter.writeTextElement("EndConnected", QString::number(endItem->GetEndConnected()));
+        xmlWriter.writeTextElement("EndCircleStartConnected", QString::number(endItem->GetStartConnected()));
+        xmlWriter.writeTextElement("EndCircleEndConnected", QString::number(endItem->GetEndConnected()));
     }
 
     xmlWriter.writeEndElement(); // ArrowLineItem
@@ -89,42 +89,48 @@ void ArrowLineItem::saveToXml(QXmlStreamWriter &xmlWriter) const
 void ArrowLineItem::loadFromXml(QXmlStreamReader &xmlReader)
 {
     QLineF line;
-    int startItemId=0, endItemId=0;
-    bool startConnected, endConnected;
+        int startItemId = 0, endItemId = 0;
+        bool startCircleStartConnected = false, startCircleEndConnected = false;
+        bool endCircleStartConnected = false, endCircleEndConnected = false;
 
-    while (!xmlReader.atEnd() && !xmlReader.hasError())
-    {
-        QXmlStreamReader::TokenType token = xmlReader.readNext();
-        if (token == QXmlStreamReader::StartElement)
+        while (!xmlReader.atEnd() && !xmlReader.hasError())
         {
-            if (xmlReader.name() == "line")
+            QXmlStreamReader::TokenType token = xmlReader.readNext();
+            if (token == QXmlStreamReader::StartElement)
             {
-                QStringList points = xmlReader.readElementText().split(",");
-                if (points.size() == 4)
+                if (xmlReader.name() == "line")
                 {
-                    line.setP1(QPointF(points[0].toDouble(), points[1].toDouble()));
-                    line.setP2(QPointF(points[2].toDouble(), points[3].toDouble()));
+                    QStringList points = xmlReader.readElementText().split(",");
+                    if (points.size() == 4)
+                    {
+                        line.setP1(QPointF(points[0].toDouble(), points[1].toDouble()));
+                        line.setP2(QPointF(points[2].toDouble(), points[3].toDouble()));
+                    }
+                } else if (xmlReader.name() == "StartItemId") {
+                    startItemId = xmlReader.readElementText().toInt();
+                } else if (xmlReader.name() == "EndItemId") {
+                    endItemId = xmlReader.readElementText().toInt();
+                } else if (xmlReader.name() == "StartCircleStartConnected") {
+                    startCircleStartConnected = xmlReader.readElementText().toInt();
+                } else if (xmlReader.name() == "StartCircleEndConnected") {
+                    startCircleEndConnected = xmlReader.readElementText().toInt();
+                } else if (xmlReader.name() == "EndCircleStartConnected") {
+                    endCircleStartConnected = xmlReader.readElementText().toInt();
+                } else if (xmlReader.name() == "EndCircleEndConnected") {
+                    endCircleEndConnected = xmlReader.readElementText().toInt();
                 }
-            } else if (xmlReader.name() == "StartItemId") {
-                startItemId = xmlReader.readElementText().toInt();
-            } else if (xmlReader.name() == "EndItemId") {
-                endItemId = xmlReader.readElementText().toInt();
-            }else if (xmlReader.name() == "StartConnected") {
-                startConnected = xmlReader.readElementText().toInt();
-            } else if (xmlReader.name() == "EndConnected") {
-                endConnected = xmlReader.readElementText().toInt();
+            } else if (token == QXmlStreamReader::EndElement && xmlReader.name() == "ArrowLineItem") {
+                break;
             }
-        } else if (token == QXmlStreamReader::EndElement && xmlReader.name() == "ArrowLineItem") {
-            break;
         }
-    }
-    setLine(line);
-    StartCircleItemId = startItemId;
-    IsStartCircleStartConnected = startConnected;
-    IsStartCircleEndConnected = endConnected;
-    EndCircleItemId = endItemId;
-    IsEndCircleStartConnected = startConnected;
-    IsEndCircleEndConnected = endConnected;
+
+        setLine(line);
+        StartCircleItemId = startItemId;
+        IsStartCircleStartConnected = startCircleStartConnected;
+        IsStartCircleEndConnected = startCircleEndConnected;
+        EndCircleItemId = endItemId;
+        IsEndCircleStartConnected = endCircleStartConnected;
+        IsEndCircleEndConnected = endCircleEndConnected;
 }
 
 void ArrowLineItem::SetStartCircle(QGraphicsEllipseItem *circle)

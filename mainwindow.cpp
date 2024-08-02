@@ -261,10 +261,10 @@ void MainWindow::setCurrentFile(const QString &fileName)
 
 void MainWindow::onSave()
 {
-    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
-    if (!fileName.isEmpty()) {
-        graphicsView->saveToFile(fileName);
-    }
+//    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
+//    if (!fileName.isEmpty()) {
+//        graphicsView->saveToFile(fileName);
+//    }
 
     QString file = "saveTest.xml";
     if (!file.isEmpty()) {
@@ -283,11 +283,11 @@ void MainWindow::onSaveAs()
 
 void MainWindow::onLoad()
 {
-//        graphicsView->ClearScene();
-//        QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
-//        if (!fileName.isEmpty()) {
-//            graphicsView->loadFromFile(fileName);
-//        }
+//    graphicsView->ClearScene();
+//    QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
+//    if (!fileName.isEmpty()) {
+//        graphicsView->loadFromFile(fileName);
+//    }
     QString file = "saveTest.xml";
     if (!file.isEmpty()) {
         graphicsView->loadFromXml(file);
