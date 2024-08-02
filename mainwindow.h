@@ -29,6 +29,10 @@ private slots:
     void zoomIn();
     void zoomOut();
     void zoomToFit();
+    void addNewPlantTab(int index);
+    void addNewPageTab(int index);
+    void closePlantTab(const int& index);
+    void closePageTab(const int& index);
 
 private:
     void SetupUI();
@@ -38,6 +42,8 @@ private:
     void setCurrentFile(const QString &fileName);
 
     QWidget *centralWidget;
+    QTabWidget *tabPlant;
+    QTabWidget *tabPage;
     QListView *listView;
     CustomDelegate *delegate;
     CustomGraphicsView *graphicsView;

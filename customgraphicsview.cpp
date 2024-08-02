@@ -22,7 +22,9 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
-    scene->setSceneRect(0, 0,600,400);
+//    scene->setSceneRect(0, 0,600,400);
+
+    scene->setSceneRect(0, 0,parent->width(),parent->height());
 
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
     acnDel = new QAction(tr("Delete line"), this);
@@ -321,17 +323,21 @@ void CustomGraphicsView::onResult()
             case 1 :
                 result += startItem->GetText().toDouble() +  endItem->GetText().toDouble();
                 visitItems.insert(startItem);
+                qDebug()<<"case 1 :"<<result;
                 break;
             case 2 :
                 result += startItem->GetText().toDouble() * endItem->GetText().toDouble();
                 visitItems.insert(endItem);
+                qDebug()<<"case 1 :"<<result;
                 break;
             case 3 :
                 result += startItem->GetText().toDouble() / endItem->GetText().toDouble();
                 visitItems.insert(endItem);
+                qDebug()<<"case 1 :"<<result;
                 break;
             default:
                 result += startItem->GetText().toDouble() - endItem->GetText().toDouble();
+                qDebug()<<"case 1 :"<<result;
                 break;
             }
         }

@@ -14,6 +14,8 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , centralWidget(new QWidget(this))
+    , tabPlant(new QTabWidget(this))
+    , tabPage(new QTabWidget(this))
     , listView(new QListView(this))
     , delegate(new CustomDelegate(64, this))
     , graphicsView(new CustomGraphicsView(this))
@@ -65,7 +67,7 @@ void MainWindow::newFile()
 
 void MainWindow::openFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Scene Files (*.scene)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("XML Files (*.xml);;Scene Files(*.scene)"));
     if (fileName.isEmpty())
         return;
 
@@ -125,22 +127,36 @@ void MainWindow::SetupUI()
     listView->setIconSize(QSize(64, 64));
     listView->setItemDelegate(delegate);
     listView->setDragEnabled(true);
-    listView->setFixedWidth(200);
+    listView->setFixedWidth(150);
 
-    setCentralWidget(centralWidget);
+    QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
+    tabPlant->addTab(tabPage, tr("Plant Stage"));
+//    tabPlant->insertTab(0,tabPage,tr("Plant Stage"));
+//    tabPlant->insertTab(1,tabPage,tr("+ Plant Stage"));
+    tabPage->addTab(graphicsView, tr("Page"));
+    tabPlant->setTabsClosable(true);
+    tabPage->setTabsClosable(true);
+
     vlayout->addWidget(listView);
+    hlayout->addLayout(vlayout);
+    hlayout->addWidget(tabPlant);
+    centralWidget->setLayout(hlayout);
+    setCentralWidget(centralWidget);
+
     //    vlayout->addWidget(oldData);
     //    vlayout->addWidget(newData);
     //    vlayout->addWidget(new QLabel("After Undo/Redo"));
     //    vlayout->addWidget(UndoData);
     //    vlayout->addWidget(RedoData);
-    hlayout->addLayout(vlayout);
-    hlayout->addWidget(graphicsView);
 
     setMinimumSize(800, 600);
     statusBar();
+    connect(tabPlant, &QTabWidget::tabBarClicked, this, &MainWindow::addNewPlantTab);
+    connect(tabPlant, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlantTab);
+    connect(tabPage, &QTabWidget::tabBarClicked, this, &MainWindow::addNewPageTab);
+    connect(tabPage, &QTabWidget::tabCloseRequested, this, &MainWindow::closePageTab);
 }
 
 void MainWindow::createMenus()
@@ -261,10 +277,10 @@ void MainWindow::setCurrentFile(const QString &fileName)
 
 void MainWindow::onSave()
 {
-//    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
-//    if (!fileName.isEmpty()) {
-//        graphicsView->saveToFile(fileName);
-//    }
+    //    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
+    //    if (!fileName.isEmpty()) {
+    //        graphicsView->saveToFile(fileName);
+    //    }
 
     QString file = "saveTest.xml";
     if (!file.isEmpty()) {
@@ -283,11 +299,11 @@ void MainWindow::onSaveAs()
 
 void MainWindow::onLoad()
 {
-//    graphicsView->ClearScene();
-//    QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
-//    if (!fileName.isEmpty()) {
-//        graphicsView->loadFromFile(fileName);
-//    }
+    //    graphicsView->ClearScene();
+    //    QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
+    //    if (!fileName.isEmpty()) {
+    //        graphicsView->loadFromFile(fileName);
+    //    }
     QString file = "saveTest.xml";
     if (!file.isEmpty()) {
         graphicsView->loadFromXml(file);
@@ -335,4 +351,49 @@ void MainWindow::zoomToFit()
 {
     graphicsView->fitInView(graphicsView->sceneRect(), Qt::KeepAspectRatio);
     zoomFactor = 1.5;
+}
+
+void MainWindow::addNewPlantTab(int index)
+{
+    if (index == tabPlant->count() - 1)
+    {
+        QWidget *newTab = new QWidget();
+        QVBoxLayout *layout = new QVBoxLayout(newTab);
+        layout->addWidget(newTab);
+        tabPlant->addTab(newTab, tr("+ Page plant"));
+    }
+}
+void MainWindow::addNewPageTab(int index)
+{
+    if (index == tabPage->count() - 1)
+    {
+        QWidget *newTab = new QWidget();
+        QVBoxLayout *layout = new QVBoxLayout(newTab);
+        layout->addWidget(new QLabel("New Tab Content", newTab));
+        tabPage->addTab(newTab, tr("+ Page"));
+      }
+}
+
+void MainWindow::closePlantTab(const int &index)
+{
+    if (index == 0) {
+        return;
+    }
+
+   QWidget* tabItem = tabPlant->widget(index);
+    tabPlant->removeTab(index);
+    delete(tabItem);
+    tabItem = nullptr;
+}
+
+void MainWindow::closePageTab(const int &index)
+{
+    if (index == 0) {
+        return;
+    }
+
+    QWidget* tabItem = tabPage->widget(index);
+    tabPage->removeTab(index);
+    delete(tabItem);
+    tabItem = nullptr;
 }
