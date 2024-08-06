@@ -36,6 +36,7 @@ private slots:
 
 private:
     void SetupUI();
+    void onItemClicked(const QModelIndex &index);
     void createMenus();
     void createActions();
     void createToolbar();
@@ -45,6 +46,7 @@ private:
     QTabWidget *tabPlant;
     QTabWidget *tabPage;
     QListView *listView;
+    QListView *menuListView;
     CustomDelegate *delegate;
     CustomGraphicsView *graphicsView;
     QLabel* oldData;
