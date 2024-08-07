@@ -22,9 +22,7 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
-//    scene->setSceneRect(0, 0,600,400);
-
-    scene->setSceneRect(0, 0,parent->width(),parent->height());
+    scene->setSceneRect(0, 0,600,400);
 
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
     acnDel = new QAction(tr("Delete line"), this);

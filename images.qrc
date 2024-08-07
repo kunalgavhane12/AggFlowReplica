@@ -122,5 +122,63 @@
         <file>dragIcon/water_treatment_or_recycling_recover_water.png</file>
         <file>dragIcon/water_valve.png</file>
         <file>dragIcon/waterSplitter.png</file>
+        <file>images/close.png</file>
+        <file>images/exports.png</file>
+        <file>images/manage_user_access.png</file>
+        <file>images/open_control_panel.png</file>
+        <file>images/open_revision_file.png</file>
+        <file>images/print_all_page.png</file>
+        <file>images/print_page.png</file>
+        <file>images/save_as_master.png</file>
+        <file>images/save_as_new_design.png</file>
+        <file>images/save_revision.png</file>
+        <file>images/save_revision_as_file.png</file>
+        <file>images/setTitle_print_option.png</file>
+        <file>images/setuser_preference.png</file>
+        <file>images/about.png</file>
+        <file>images/algin.png</file>
+        <file>images/copy.png</file>
+        <file>images/cut.png</file>
+        <file>images/delete.png</file>
+        <file>images/disclaimer.png</file>
+        <file>images/displayCleanWater.png</file>
+        <file>images/displayToolbar.png</file>
+        <file>images/displayToolbarTip.png</file>
+        <file>images/distribute.png</file>
+        <file>images/draw_orthogonal.png</file>
+        <file>images/getUpdate.png</file>
+        <file>images/graphicalundo.png</file>
+        <file>images/liencseAggrement.png</file>
+        <file>images/openConfigurationAdvisor.png</file>
+        <file>images/openHelp.png</file>
+        <file>images/refresh.png</file>
+        <file>images/reportallItem.png</file>
+        <file>images/reportEmission.png</file>
+        <file>images/reportEmissionall.png</file>
+        <file>images/reportSelectItem.png</file>
+        <file>images/requestSupport.png</file>
+        <file>images/runPlant.png</file>
+        <file>images/runStage.png</file>
+        <file>images/selectall.png</file>
+        <file>images/sendSuggestion.png</file>
+        <file>images/turnoffallredflag.png</file>
+        <file>images/units.png</file>
+        <file>images/zoomIn.png</file>
+        <file>images/zoomnormal.png</file>
+        <file>images/zoomout.png</file>
+        <file>images/graphicalredo.png</file>
+        <file>images/bottom.png</file>
+        <file>images/horizontalbycenter.png</file>
+        <file>images/left.png</file>
+        <file>images/right.png</file>
+        <file>images/top.png</file>
+        <file>images/verticalbycenter.png</file>
+        <file>images/import_data_previous.png</file>
+        <file>images/manage_attchements.png</file>
+        <file>images/view_edit_emission_table.png</file>
+        <file>images/view_edit_specifications.png</file>
+        <file>images/view_screen_size.png</file>
+        <file>images/viewallcrusher.png</file>
+        <file>images/run_save.png</file>
     </qresource>
 </RCC>
