@@ -6,6 +6,7 @@
 #include <QGraphicsLineItem>
 #include <QPointF>
 #include <QMap>
+#include <QPolygonF>
 #include "CustomPixmapItem.h"
 #include <arrowlineitem.h>
 #include <QMenu>
@@ -18,11 +19,25 @@ using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem 
 class CustomGraphicsView : public QGraphicsView
 {
     Q_OBJECT
-
 public:
     CustomGraphicsView(QWidget *parent = nullptr);
     void ClearScene();
-
+    enum DrawingMode {
+        DefaultMode,
+        ArrowMode,
+        LineMode,
+        PolylineMode,
+        EllipseMode,
+        RectangleMode
+    };
+    void setDrawingMode(DrawingMode mode) {
+        currentMode = mode;
+        if (currentItem) {
+            scene->removeItem(currentItem);
+            delete currentItem;
+            currentItem = nullptr;
+        }
+    }
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -63,7 +78,9 @@ private:
     void EmitDebugData(QPoint pos);
     void AddItemToAddStack(QGraphicsItem *item);
     void AddItemToMoveStack(QGraphicsItem *item);
-
+    DrawingMode currentMode;
+    QPointF startPoint;
+    QGraphicsItem *currentItem;
     QGraphicsScene *scene;
     ArrowLineItem *currentLine;
     QPointF lineStartPoint;

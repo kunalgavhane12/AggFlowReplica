@@ -12,6 +12,8 @@
 #include <QToolBar>
 #include <QGroupBox>
 #include <QPushButton>
+#include <QColorDialog>
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,7 +21,6 @@ MainWindow::MainWindow(QWidget *parent)
     , tabPlant(new QTabWidget(this))
     , tabPage(new QTabWidget(this))
     , listView(new QListView(this))
-    , menuListView(new QListView(this))
     , delegate(new CustomDelegate(40, this))
     , graphicsView(new CustomGraphicsView(this))
     , oldData(new QLabel)
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     createActions();
     createMenus();
     createToolbar();
+    setFixedSize(800,600);
 
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
@@ -77,81 +79,6 @@ void MainWindow::openFile()
     onLoad();
 }
 
-//void MainWindow::SetupUI()
-//{
-//    QStringList menulabels = {"Start point", "In line Equipment", "Transport Equipment", "Spiltters and flop_gates",
-//                              "Crushing Equipment", "Screening Equipment", "Mobile Equipment", "Wash Equipment",
-//                              "Inventory (temporary storage)", "End Products", "Clean Water Equipment", "Measurement Equipment", "Power Sources and Auxiliary Equipment",
-//                              "Notes Coloring and Drawing"};
-//    QList<QIcon> menuIcons;
-//    menuIcons << QIcon(":/icons/images/start_point.png")
-//              << QIcon(":/icons/images/in_line_Equipment.png")
-//              << QIcon(":/icons/images/transport_Equipment.png")
-//              << QIcon(":/icons/images/spiltters_and_flop_gates.png")
-//              << QIcon(":/icons/images/crushing_Equipment.png")
-//              << QIcon(":/icons/images/screening_Equipment.png")
-//              << QIcon(":/icons/images/mobile_Equipment.png")
-//              << QIcon(":/icons/images/wash_Equipment.png")
-//              << QIcon(":/icons/images/inventory_(temporary storage).png")
-//              << QIcon(":/icons/images/end_Products.png")
-//              << QIcon(":/icons/images/clean_Water_Equipment.png")
-//              << QIcon(":/icons/images/measurement_Equipment.png")
-//              << QIcon(":/icons/images/power_Sources_and_Auxiliary_Equipment.png")
-//              << QIcon(":/icons/images/notes_Coloring_and_Drawing.png");
-
-//    QGroupBox *buttonGroupBox = new QGroupBox(this);
-//    QGridLayout *buttonLayout = new QGridLayout(buttonGroupBox);
-
-//    for (int i = 0; i < menulabels.size(); ++i) {
-//        QPushButton *button = new QPushButton( this);
-//        button->setIcon(menuIcons[i]);
-//        button->setIconSize(QSize(40, 40));
-//        button->setFixedSize(50, 50);
-//        connect(button, &QPushButton::clicked, [this, i]() { onItemClicked(i); });
-//        buttonLayout->addWidget(button, i, 0);
-//    }
-
-//    IconListModel *model = new IconListModel(this);
-//    QStringList labels = {"Item 0", "Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"};
-//    QList<QIcon> icons;
-//    icons = {QIcon(":/icons/dragIcon/start_points_loader.png"),
-//             QIcon(":/icons/dragIcon/start_points_dump_truck.png"),
-//             QIcon(":/icons/dragIcon/start_points_excavator.png"),
-//             QIcon(":/icons/dragIcon/start_points_bull_dozer.png"),
-//             QIcon(":/icons/dragIcon/start_points_dredge.png"),
-//             QIcon(":/icons/dragIcon/start_points_generic_material_source.png"),
-//             QIcon(":/icons/dragIcon/start_points_start_suger_pile.png")};
-
-//    model->setData(labels, icons);
-//    listView->setModel(model);
-//    listView->setFixedWidth(70);
-//    listView->setIconSize(QSize(40, 40));
-//    listView->setItemDelegate(delegate);
-//    listView->setDragEnabled(true);
-
-//    tabPlant->addTab(tabPage, tr("Plant Stage"));
-//    tabPage->addTab(graphicsView, tr("Page"));
-//    tabPlant->setTabsClosable(true);
-//    tabPage->setTabsClosable(true);
-
-//    setCentralWidget(centralWidget);
-//    QVBoxLayout *vlayout = new QVBoxLayout();
-//    QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
-
-//    QGroupBox *groupBox = new QGroupBox();
-//    QHBoxLayout *groupBoxLayout = new QHBoxLayout(groupBox);
-//    groupBoxLayout->addWidget(buttonGroupBox);
-//    groupBoxLayout->addWidget(listView);
-//    groupBox->setLayout(groupBoxLayout);
-
-//    hlayout->setMargin(5);
-//    hlayout->addLayout(vlayout);
-//    hlayout->addWidget(groupBox);
-//    hlayout->addWidget(tabPlant);
-//    setMinimumSize(800, 600);
-//    statusBar();
-//}
-
 void MainWindow::SetupUI()
 {
     QStringList menulabels = {"Start point", "In line Equipment", "Transport Equipment", "Spiltters and flop_gates",
@@ -174,11 +101,18 @@ void MainWindow::SetupUI()
               << QIcon(":/icons/images/power_Sources_and_Auxiliary_Equipment.png")
               << QIcon(":/icons/images/notes_Coloring_and_Drawing.png");
 
-    IconListModel *menuModel = new IconListModel(this);
-    menuModel->setData(menulabels, menuIcons);
-    menuListView->setModel(menuModel);
-    menuListView->setFixedWidth(70);
-    menuListView->setIconSize(QSize(40, 40));
+    setCentralWidget(centralWidget);
+    QGroupBox *groupBox = new QGroupBox();
+    QVBoxLayout *groupBoxLayout = new QVBoxLayout(groupBox);
+
+    for (int i = 0; i < menulabels.size(); i++) {
+        QPushButton *button = new QPushButton( this);
+        button->setIcon(menuIcons[i]);
+        button->setIconSize(QSize(35, 35));
+        button->setFixedSize(40, 40);
+        connect(button, &QPushButton::clicked, [this, i]() { onItemClicked(i); });
+        groupBoxLayout->addWidget(button, i, 0);
+    }
 
     IconListModel *model = new IconListModel(this);
     QStringList labels = {"Item 0", "Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6"};
@@ -193,43 +127,43 @@ void MainWindow::SetupUI()
 
     model->setData(labels, icons);
     listView->setModel(model);
-    listView->setFixedWidth(70);
+    listView->setFixedWidth(50);
     listView->setIconSize(QSize(40, 40));
     listView->setItemDelegate(delegate);
     listView->setDragEnabled(true);
-    tabPlant->addTab(tabPage, tr("Plant Stage"));
-    tabPage->addTab(graphicsView, tr("Page"));
-    tabPlant->setTabsClosable(true);
-    tabPage->setTabsClosable(true);
+    createTabs();
+    //    tabPlant->addTab(tabPage, tr("Plant Stage"));
+    //    tabPage->addTab(graphicsView, tr("Page"));
+    //    tabPlant->setTabsClosable(true);
+    //    tabPage->setTabsClosable(true);
 
-    setCentralWidget(centralWidget);
-    QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
-    QGroupBox *groupBox = new QGroupBox();
-    QHBoxLayout *groupBoxLayout = new QHBoxLayout(groupBox);
-    groupBox->setFixedWidth(150);
-    groupBoxLayout->addWidget(menuListView);
-    groupBoxLayout->addWidget(listView);
-    groupBox->setLayout(groupBoxLayout);
+
+    groupBox->setFixedWidth(50);
     groupBoxLayout->setMargin(0);
     hlayout->setMargin(2);
-    hlayout->addLayout(vlayout);
     hlayout->addWidget(groupBox);
+    hlayout->addWidget(listView);
     hlayout->addWidget(tabPlant);
-    setMinimumSize(800, 600);
+    setMinimumSize(800, 650);
     statusBar();
-    //connect which index selected according to list view display
-    connect(menuListView, &QListView::clicked, this, &MainWindow::onItemClicked);
+}
+void MainWindow::createTabs()
+{
+    tabPlant->addTab(tabPage, tr("Plant Stage #1"));
+    tabPage->addTab(graphicsView, tr("Page #1"));
+    tabPlant->setTabsClosable(true);
+    tabPage->setTabsClosable(true);
 }
 
-void MainWindow::onItemClicked(const QModelIndex &index)
-//void MainWindow::onItemClicked(int index)
+
+void MainWindow::onItemClicked(int index)
 {
     QStringList labels;
     IconListModel *menuModel = new IconListModel(this);
     QList<QIcon> menuIcons;
 
-    switch (index.row()) {
+    switch (index) {
     case 0:
         menuIcons = {QIcon(":/icons/dragIcon/start_points_loader.png"),
                      QIcon(":/icons/dragIcon/start_points_dump_truck.png"),
@@ -257,6 +191,9 @@ void MainWindow::onItemClicked(const QModelIndex &index)
                      QIcon(":/icons/dragIcon/place_a_surge_bin_in_the_flow.png"),
                      QIcon(":/icons/dragIcon/bucket_elevator.png"),
                      QIcon(":/icons/dragIcon/screw_conveyor.png")};
+        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
+            onDrawingModeSelected(index.row());
+        });
         break;
     case 3:
         menuIcons = {QIcon(":/icons/dragIcon/place_a_splitter_in_the_flow.png"),
@@ -348,6 +285,9 @@ void MainWindow::onItemClicked(const QModelIndex &index)
                      QIcon(":/icons/dragIcon/ellipse.png"),
                      QIcon(":/icons/dragIcon/rectangle.png"),
                      QIcon(":/icons/dragIcon/symbols_open_to_select_model.png")};
+        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
+            onDrawingModeSelected(index.row());
+        });
         break;
     default:
         menuIcons = {QIcon()};
@@ -787,6 +727,65 @@ void MainWindow::setCurrentFile(const QString &fileName)
     setWindowFilePath(currentFile.isEmpty() ? tr("untitled.xml") : currentFile);
 }
 
+void MainWindow::onDrawingModeSelected(int mode) {
+    listView->setDragEnabled(false);
+    switch (mode) {
+    case 0:
+        qDebug() << "default mouse function";
+        break;
+    case 1:
+        //set paint brush color for change item b/w to color in graphicview
+        qDebug() << "paint brush";
+        break;
+    case 2:
+        //choose color for brush for change item color in graphicview
+        QColorDialog::getColor();
+        qDebug() << "brush paint color";
+        break;
+    case 3:
+        //set paint brush B/W for change item color to b/w in graphicview
+        qDebug() << "erase color";
+        break;
+    case 4:
+        //open dialog box and take multi line text input in that and paste in graphicview
+        qDebug() << "Multiline note";
+        break;
+    case 5:
+        //open dialog box and take signle line text input in that and paste in graphicview
+        qDebug() << "adjustable text ";
+        break;
+    case 6:
+        //draw arrow in graphicview
+        graphicsView->setDrawingMode(CustomGraphicsView::ArrowMode);
+        qDebug() << "arrow";
+        break;
+    case 7:
+        //draw line in graphicview
+        graphicsView->setDrawingMode(CustomGraphicsView::LineMode);
+        qDebug() << "line";
+        break;
+    case 8:
+        //draw polyline in graphicview
+        graphicsView->setDrawingMode(CustomGraphicsView::PolylineMode);
+        qDebug() << "polyline";
+        break;
+    case 9:
+        //draw ellipse in graphicview
+        graphicsView->setDrawingMode(CustomGraphicsView::EllipseMode);
+        qDebug() << "ellipse";
+        break;
+    case 10:
+        //draw Rectangle in graphicview
+        graphicsView->setDrawingMode(CustomGraphicsView::RectangleMode);
+        qDebug() << "Rectangle";
+        break;
+    default:
+        graphicsView->setDrawingMode(CustomGraphicsView::DefaultMode);
+        listView->setDragEnabled(true);
+        break;
+    }
+}
+
 void MainWindow::onSave()
 {
     //    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
@@ -872,7 +871,7 @@ void MainWindow::addNewPlantTab(int index)
         QTabWidget *newTab = new QTabWidget();
         QVBoxLayout *layout = new QVBoxLayout(newTab);
         layout->addWidget(newTab);
-        tabPlant->addTab(newTab, tr("Page plant #%1").arg(tabPlant->count()));
+        tabPlant->addTab(newTab, tr("Page plant #%1").arg(tabPlant->count()+1));
     }
 }
 void MainWindow::addNewPageTab(int index)
@@ -882,7 +881,7 @@ void MainWindow::addNewPageTab(int index)
         CustomGraphicsView *graphicsView = (new CustomGraphicsView(this));
         QVBoxLayout *layout = new QVBoxLayout(graphicsView);
         layout->addWidget(graphicsView);
-        tabPage->addTab(graphicsView, tr("Page #%1").arg(tabPage->count()));
+        tabPage->addTab(graphicsView, tr("Page #%1").arg(tabPage->count()+1));
     }
 }
 
