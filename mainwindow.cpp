@@ -445,12 +445,10 @@ void MainWindow::createMenus()
     helpMenu->addAction(aggFlowLicense);
     helpMenu->addSeparator();
     helpMenu->addAction(about);
-
 }
 
 void MainWindow::createActions()
 {
-
     saveAction = new QAction(tr("&Save Revision"), this);
     saveAction->setShortcuts(QKeySequence::Save);
     saveAction->setStatusTip(tr("Ctrl+S"));

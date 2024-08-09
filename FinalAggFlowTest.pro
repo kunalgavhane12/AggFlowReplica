@@ -16,7 +16,6 @@ SOURCES += \
     custompixmapitem.cpp \
     main.cpp \
     mainwindow.cpp
-
 HEADERS += \
     addcommand.h \
     arrowlineitem.h \
