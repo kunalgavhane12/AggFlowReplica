@@ -47,9 +47,7 @@ private:
 
     QWidget *centralWidget;
     QTabWidget *tabPlant;
-    QTabWidget *tabPlantSecond;
     QTabWidget *tabPage;
-    QTabWidget *tabPageSecond;
     QListView *listView;
     CustomDelegate *delegate;
     CustomGraphicsView *graphicsView;

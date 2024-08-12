@@ -23,10 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
     , listView(new QListView(this))
     , delegate(new CustomDelegate(40, this))
     , graphicsView(new CustomGraphicsView(this))
-    , oldData(new QLabel)
-    , newData(new QLabel)
-    , UndoData(new QLabel)
-    , RedoData(new QLabel)
+    , oldData(new QLabel(this))
+    , newData(new QLabel(this))
+    , UndoData(new QLabel(this))
+    , RedoData(new QLabel(this))
     , status(new QLabel(this))
     , currentFile("saveTest.scene")
     , zoomFactor(1.5)
@@ -35,7 +35,6 @@ MainWindow::MainWindow(QWidget *parent)
     createActions();
     createMenus();
     createToolbar();
-    setFixedSize(800,600);
 
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
@@ -44,8 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     exportAction = new QAction("Export", this);
     menuBar()->addAction(exportAction);
     connect(exportAction, &QAction::triggered, this, &MainWindow::onSave);
-
-    status->setText("<span style='font-size: 16px; font-weight: bold;'>Result : 0" "</span>");
+    status->setText("<span style='font-size: 16px; font-weight: bold;'>Result : 0</span>");
     statusBar()->addPermanentWidget(status);
 }
 
@@ -131,11 +129,8 @@ void MainWindow::SetupUI()
     listView->setIconSize(QSize(40, 40));
     listView->setItemDelegate(delegate);
     listView->setDragEnabled(true);
+
     createTabs();
-    //    tabPlant->addTab(tabPage, tr("Plant Stage"));
-    //    tabPage->addTab(graphicsView, tr("Page"));
-    //    tabPlant->setTabsClosable(true);
-    //    tabPage->setTabsClosable(true);
 
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
 
@@ -148,14 +143,30 @@ void MainWindow::SetupUI()
     setMinimumSize(800, 650);
     statusBar();
 }
+
 void MainWindow::createTabs()
 {
-    tabPlant->addTab(tabPage, tr("Plant Stage #1"));
-    tabPage->addTab(graphicsView, tr("Page #1"));
+
+    QWidget *tab1 = new QWidget(this);
+    QVBoxLayout *tab1Layout = new QVBoxLayout(tab1);
+    tab1Layout->addWidget(tabPage);
+    tab1->setLayout(tab1Layout);
+    tabPlant->addTab(tab1, "Plant Stage #1");
+
+    QWidget *tab2 = new QWidget(this);
+    tabPlant->addTab(tab2, "+ Stage");
+
+    tabPage->addTab(graphicsView, "Page #1");
+
+    QWidget *nestedTab2 = new QWidget(this);
+    tabPage->addTab(nestedTab2, "+ Page");
+
     tabPlant->setTabsClosable(true);
     tabPage->setTabsClosable(true);
-}
 
+    connect(tabPage, &QTabWidget::currentChanged, this, &MainWindow::addNewPageTab);
+    connect(tabPlant, &QTabWidget::currentChanged, this, &MainWindow::addNewPlantTab);
+}
 
 void MainWindow::onItemClicked(int index)
 {
@@ -191,9 +202,9 @@ void MainWindow::onItemClicked(int index)
                      QIcon(":/icons/dragIcon/place_a_surge_bin_in_the_flow.png"),
                      QIcon(":/icons/dragIcon/bucket_elevator.png"),
                      QIcon(":/icons/dragIcon/screw_conveyor.png")};
-//        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
-//            onDrawingModeSelected(index.row());
-//        });
+        //        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
+        //            onDrawingModeSelected(index.row());
+        //        });
         break;
     case 3:
         menuIcons = {QIcon(":/icons/dragIcon/place_a_splitter_in_the_flow.png"),
@@ -757,7 +768,6 @@ void MainWindow::onDrawingModeSelected(int mode) {
         break;
     case 7:
         graphicsView->setDrawingMode(CustomGraphicsView::LineMode);
-        qDebug() << "line";
         break;
     case 8:
         graphicsView->setDrawingMode(CustomGraphicsView::PolylineMode);
@@ -854,22 +864,32 @@ void MainWindow::zoomToFit()
 
 void MainWindow::addNewPlantTab(int index)
 {
-    if (index == tabPlant->count() - 1)
-    {
-        QTabWidget *newTab = new QTabWidget();
-        QVBoxLayout *layout = new QVBoxLayout(newTab);
-        layout->addWidget(newTab);
-        tabPlant->addTab(newTab, tr("Page plant #%1").arg(tabPlant->count()+1));
+    if (index == tabPlant->count() - 1) {
+        QWidget *newStage = new QWidget();
+        QVBoxLayout *layout = new QVBoxLayout(newStage);
+        newStage->setLayout(layout);
+
+        QTabWidget *newPageTabWidget = new QTabWidget();
+        layout->addWidget(newPageTabWidget);
+
+        tabPlant->insertTab(tabPlant->count() - 1, newStage, tr("Plant Stage #%1").arg(tabPlant->count()));
+        tabPlant->setCurrentIndex(tabPlant->count() - 2);
+
+        // Create default pages for the new stage
+        CustomGraphicsView *graphicsView = new CustomGraphicsView();
+        newPageTabWidget->addTab(graphicsView, "Page #1");
+
+        QWidget *nestedTab2 = new QWidget();
+        newPageTabWidget->addTab(nestedTab2, "+ Page");
     }
 }
+
 void MainWindow::addNewPageTab(int index)
 {
-    if (index == tabPage->count() - 1)
-    {
-        CustomGraphicsView *graphicsView = (new CustomGraphicsView(this));
-        QVBoxLayout *layout = new QVBoxLayout(graphicsView);
-        layout->addWidget(graphicsView);
-        tabPage->addTab(graphicsView, tr("Page #%1").arg(tabPage->count()+1));
+    if (index == tabPage->count() - 1) {
+        CustomGraphicsView *graphicsView = new CustomGraphicsView(this);
+        tabPage->insertTab(tabPage->count() - 1, graphicsView, tr("Page #%1").arg(tabPage->count()));
+        tabPage->setCurrentIndex(tabPage->count() - 2);
     }
 }
 
