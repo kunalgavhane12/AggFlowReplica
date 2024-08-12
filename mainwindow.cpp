@@ -191,9 +191,9 @@ void MainWindow::onItemClicked(int index)
                      QIcon(":/icons/dragIcon/place_a_surge_bin_in_the_flow.png"),
                      QIcon(":/icons/dragIcon/bucket_elevator.png"),
                      QIcon(":/icons/dragIcon/screw_conveyor.png")};
-        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
-            onDrawingModeSelected(index.row());
-        });
+//        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
+//            onDrawingModeSelected(index.row());
+//        });
         break;
     case 3:
         menuIcons = {QIcon(":/icons/dragIcon/place_a_splitter_in_the_flow.png"),
@@ -753,32 +753,22 @@ void MainWindow::onDrawingModeSelected(int mode) {
         qDebug() << "adjustable text ";
         break;
     case 6:
-        //draw arrow in graphicview
         graphicsView->setDrawingMode(CustomGraphicsView::ArrowMode);
-        qDebug() << "arrow";
         break;
     case 7:
-        //draw line in graphicview
         graphicsView->setDrawingMode(CustomGraphicsView::LineMode);
         qDebug() << "line";
         break;
     case 8:
-        //draw polyline in graphicview
         graphicsView->setDrawingMode(CustomGraphicsView::PolylineMode);
-        qDebug() << "polyline";
         break;
     case 9:
-        //draw ellipse in graphicview
         graphicsView->setDrawingMode(CustomGraphicsView::EllipseMode);
-        qDebug() << "ellipse";
         break;
     case 10:
-        //draw Rectangle in graphicview
         graphicsView->setDrawingMode(CustomGraphicsView::RectangleMode);
-        qDebug() << "Rectangle";
         break;
     default:
-        graphicsView->setDrawingMode(CustomGraphicsView::DefaultMode);
         listView->setDragEnabled(true);
         break;
     }

@@ -23,7 +23,7 @@ public:
     CustomGraphicsView(QWidget *parent = nullptr);
     void ClearScene();
     enum DrawingMode {
-        DefaultMode,
+        None,
         ArrowMode,
         LineMode,
         PolylineMode,
@@ -61,10 +61,10 @@ signals:
 private slots:
     void updateLinePosition();
     void onActionSave();
-    void onActionDelete();
     void onSetValue();
 
 public slots:
+    void onActionDelete();
     void saveToFile(const QString &fileName);
     void loadFromFile(const QString &fileName);
     void onResult();
@@ -80,8 +80,8 @@ private:
     void AddItemToMoveStack(QGraphicsItem *item);
     DrawingMode currentMode;
     QPointF startPoint;
-    QGraphicsItem *currentItem;
     QGraphicsScene *scene;
+    QGraphicsItem *currentItem;
     ArrowLineItem *currentLine;
     QPointF lineStartPoint;
     LineConnectionsMap lineConnections;
