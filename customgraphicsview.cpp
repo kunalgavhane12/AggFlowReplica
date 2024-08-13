@@ -3,15 +3,6 @@
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QDataStream>
-#include <arrowlineitem.h>
-#include <QMessageBox>
-#include <QIcon>
-#include <QInputDialog>
-#include <addcommand.h>
-#include <QDebug>
-#include <QApplication>
-#include <QDomDocument>
-#include <QBuffer>
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
@@ -22,14 +13,15 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
-    scene->setSceneRect(0, 0,600,400);
+    setFixedSizeAndScene(QSize(600, 400));
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //    scene->setSceneRect(0, 0,600,400);
     setMouseTracking(true);
 
-    acnSave = new QAction(tr("Save Not Yet Implemented"), this);
     acnDel = new QAction(tr("Delete line"), this);
     acnSetVal = new QAction(tr("Set value"), this);
 
-    connect(acnSave, &QAction::triggered, this, &CustomGraphicsView::onActionSave);
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
     connect(acnSetVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
     connect(this, &CustomGraphicsView::UndoTriggered, UndoStack, &QUndoStack::undo);
@@ -82,25 +74,50 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
     QPointF scenePos = mapToScene(event->pos());
     QGraphicsItem *item = scene->itemAt(scenePos, QTransform());
 
-    if (item && dynamic_cast<QGraphicsEllipseItem *>(item) &&  dynamic_cast<QGraphicsRectItem *>(item))
+    if (item)
     {
-        lineStartPoint = scenePos;
-        currentLine = new ArrowLineItem(QLineF(lineStartPoint, lineStartPoint));
-        scene->addItem(currentLine);
-        lineConnections[currentLine].first = dynamic_cast<QGraphicsEllipseItem *>(item);
-        currentLine->SetStartCircle(dynamic_cast<QGraphicsEllipseItem *>(item));
-        item->parentItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
-        currentLine->SetStartCircleAttributes();
-    }
+
+       if(dynamic_cast<QGraphicsEllipseItem *>(item))
+        {
+
+            QGraphicsEllipseItem* ellipseItem = dynamic_cast<QGraphicsEllipseItem *>(item);
+
+                QColor ellipseColor = ellipseItem->brush().color(); // Get the color of the ellipse
+
+                if (ellipseColor == Qt::blue || ellipseColor == Qt::red)
+                {
+                    lineStartPoint = scenePos;
+                    currentLine = new ArrowLineItem(QLineF(lineStartPoint, lineStartPoint));
+                    scene->addItem(currentLine);
+                    lineConnections[currentLine].first = dynamic_cast<QGraphicsEllipseItem *>(item);
+                    currentLine->SetStartCircle(dynamic_cast<QGraphicsEllipseItem *>(item));
+                    item->parentItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
+                    currentLine->SetStartCircleAttributes();
+                }
+            }
+        }
+
 
     if (item && dynamic_cast<QGraphicsProxyWidget *>(item))
     {
+        QGraphicsScene* scene = item->scene();
+        if (scene)
+        {
+            foreach(QGraphicsItem* selectedItem, scene->selectedItems())
+            {
+                selectedItem->setSelected(false);
+            }
+        }
+
+        item->setSelected(true);
+
         itemStartPosition = dynamic_cast<QGraphicsProxyWidget *>(item)->scenePos();
         emit PublishNewData(QString("(%1, %2)").arg(scenePos.x()).arg(scenePos.y()));
     }
 
     startPoint = scenePos;
-    switch (currentMode) {
+    switch (currentMode)
+    {
     case ArrowMode:
         currentItem = new QGraphicsLineItem(QLineF(startPoint, startPoint));
         break;
@@ -119,7 +136,8 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
         QGraphicsView::mousePressEvent(event);
         return;
     }
-    if (currentItem) {
+    if (currentItem)
+    {
         scene->addItem(currentItem);
     }
 
@@ -278,6 +296,12 @@ void CustomGraphicsView::ClearScene()
     emit PublishOldData(QString());
 }
 
+void CustomGraphicsView::setFixedSizeAndScene(const QSize &size)
+{
+    setFixedSize(size);
+    scene->setSceneRect(0, 0, size.width(), size.height());
+}
+
 void CustomGraphicsView::contextMenuEvent(QContextMenuEvent *event)
 {
     contextMenu.clear();
@@ -285,7 +309,6 @@ void CustomGraphicsView::contextMenuEvent(QContextMenuEvent *event)
     if (line)
     {
         // Add actions to the context menu
-        contextMenu.addAction(acnSave);
         contextMenu.addAction(acnDel);
         selectedItem = line;
         // Show the context menu at the cursor position
@@ -311,13 +334,23 @@ void CustomGraphicsView::wheelEvent(QWheelEvent *event)
     }
     else
     {
+        qreal factor = scalefactor;
+        if (event->angleDelta().y() < 0)
+            factor = 1.0 / scalefactor;
+
+        QWidget *parentWidget = qobject_cast<QWidget*>(parent());
+        if (parentWidget) {
+            QSize newSize = parentWidget->size() * scalefactor;
+            parentWidget->resize(newSize);
+        }
         QGraphicsView::wheelEvent(event);
     }
 }
 
-void CustomGraphicsView::onActionSave()
+void CustomGraphicsView::resizeEvent(QResizeEvent *event)
 {
-    // Action 1 triggered
+    QGraphicsView::resizeEvent(event);
+    scene->setSceneRect(0, 0, event->size().width(), event->size().height());
 }
 
 //remove lines and break connections . Remember to delete pointers

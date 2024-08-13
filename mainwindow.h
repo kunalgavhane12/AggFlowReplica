@@ -32,8 +32,8 @@ private slots:
     void zoomToFit();
     void addNewPlantTab(int index);
     void addNewPageTab(int index);
-    void closePlantTab(const int& index);
-    void closePageTab(const int& index);
+    void closePlantTab(int index);
+    void closePageTab(int index);
 
 private:
     void SetupUI();

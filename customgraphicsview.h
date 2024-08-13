@@ -8,11 +8,19 @@
 #include <QMap>
 #include <QPolygonF>
 #include "CustomPixmapItem.h"
-#include <arrowlineitem.h>
+#include "arrowlineitem.h"
 #include <QMenu>
 #include <QAction>
 #include <QContextMenuEvent>
 #include <QUndoStack>
+#include <QMessageBox>
+#include <QIcon>
+#include <QInputDialog>
+#include <addcommand.h>
+#include <QDebug>
+#include <QApplication>
+#include <QDomDocument>
+#include <QBuffer>
 
 using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
 
@@ -22,6 +30,7 @@ class CustomGraphicsView : public QGraphicsView
 public:
     CustomGraphicsView(QWidget *parent = nullptr);
     void ClearScene();
+    void setFixedSizeAndScene(const QSize& size);
     enum DrawingMode {
         None,
         ArrowMode,
@@ -48,6 +57,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
     virtual void wheelEvent(QWheelEvent *event)override;
+    void resizeEvent(QResizeEvent *event) override;
 
 signals:
     void UndoTriggered();
@@ -60,7 +70,6 @@ signals:
 
 private slots:
     void updateLinePosition();
-    void onActionSave();
     void onSetValue();
 
 public slots:
@@ -86,7 +95,6 @@ private:
     QPointF lineStartPoint;
     LineConnectionsMap lineConnections;
     QMenu contextMenu;
-    QAction *acnSave;
     QAction *acnDel;
     QAction *acnSetVal;
     QAction *acnResult;
