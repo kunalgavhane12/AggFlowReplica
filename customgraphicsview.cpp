@@ -13,6 +13,7 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
+    setDragMode(QGraphicsView::RubberBandDrag);
     setFixedSizeAndScene(QSize(600, 400));
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -77,25 +78,25 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
     if (item)
     {
 
-       if(dynamic_cast<QGraphicsEllipseItem *>(item))
+        if(dynamic_cast<QGraphicsEllipseItem *>(item))
         {
 
             QGraphicsEllipseItem* ellipseItem = dynamic_cast<QGraphicsEllipseItem *>(item);
 
-                QColor ellipseColor = ellipseItem->brush().color(); // Get the color of the ellipse
+            QColor ellipseColor = ellipseItem->brush().color(); // Get the color of the ellipse
 
-                if (ellipseColor == Qt::blue || ellipseColor == Qt::red)
-                {
-                    lineStartPoint = scenePos;
-                    currentLine = new ArrowLineItem(QLineF(lineStartPoint, lineStartPoint));
-                    scene->addItem(currentLine);
-                    lineConnections[currentLine].first = dynamic_cast<QGraphicsEllipseItem *>(item);
-                    currentLine->SetStartCircle(dynamic_cast<QGraphicsEllipseItem *>(item));
-                    item->parentItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
-                    currentLine->SetStartCircleAttributes();
-                }
+            if (ellipseColor == Qt::blue || ellipseColor == Qt::red)
+            {
+                lineStartPoint = scenePos;
+                currentLine = new ArrowLineItem(QLineF(lineStartPoint, lineStartPoint));
+                scene->addItem(currentLine);
+                lineConnections[currentLine].first = dynamic_cast<QGraphicsEllipseItem *>(item);
+                currentLine->SetStartCircle(dynamic_cast<QGraphicsEllipseItem *>(item));
+                item->parentItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
+                currentLine->SetStartCircleAttributes();
             }
         }
+    }
 
 
     if (item && dynamic_cast<QGraphicsProxyWidget *>(item))
@@ -334,15 +335,6 @@ void CustomGraphicsView::wheelEvent(QWheelEvent *event)
     }
     else
     {
-        qreal factor = scalefactor;
-        if (event->angleDelta().y() < 0)
-            factor = 1.0 / scalefactor;
-
-        QWidget *parentWidget = qobject_cast<QWidget*>(parent());
-        if (parentWidget) {
-            QSize newSize = parentWidget->size() * scalefactor;
-            parentWidget->resize(newSize);
-        }
         QGraphicsView::wheelEvent(event);
     }
 }

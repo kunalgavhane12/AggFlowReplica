@@ -8,68 +8,27 @@
 #include <QInputDialog>
 #include <QMessageBox>
 
-int CustomItem::idCounter = 0;
-double CustomItem::rectangleArea = 0;
-double CustomItem::rectanglePerimeter = 0;
-double CustomItem::circleArea = 0;
-double CustomItem::circleCircumference = 0;
-double CustomItem::triangleArea = 0;
-double CustomItem::trianglePerimeter = 0;
 
-CustomItem::CustomItem(CustomType customType, QMenu *contextMenu, QGraphicsItem *parent)
+CustomItem::CustomItem(QGraphicsItem *parent)
     : QGraphicsPolygonItem(parent)
 {
-    myCustomType = customType;
-    myContextMenu = contextMenu;
-    myId = idCounter++;
+
     QPainterPath path;
     QPixmap pixmap;
     switch (myCustomType) {
-    case Output:
-        path.moveTo(200, 50);
-        path.arcTo(150, 0, 50, 50, 0, 90);
-        path.arcTo(50, 0, 50, 50, 90, 90);
-        path.arcTo(50, 50, 50, 50, 180, 90);
-        path.arcTo(150, 50, 50, 50, 270, 90);
-        path.lineTo(200, 50);
-        myPolygon = path.toFillPolygon().translated(-125, -50);
-        textItem = new QGraphicsTextItem("Result :", this);
-        textItem->setPos(-40, -20);
-        setPolygon(myPolygon);
-        break;
-    case Diamond:
-        myPolygon << QPointF(-75, 0) << QPointF(0, 75)
-                  << QPointF(75, 0) << QPointF(0, -75)
-                  << QPointF(-75, 0);
-        textItem = new QGraphicsTextItem("Diamond", this);
-        textItem->setPos(-30, -10);
-        setPolygon(myPolygon);
-        break;
+
     case Rectangle:
         myPolygon << QPointF(-60, -60) << QPointF(60, -60)
                   << QPointF(60, 60) << QPointF(-60, 60)
                   << QPointF(-60, -60);
-        textItem = new QGraphicsTextItem("Length : \nWidth :", this);
-        textItem->setPos(-40, -40);
-        setPolygon(myPolygon);
-        break;
-    case Triangle:
-        myPolygon << QPointF(0, -75) << QPointF(65, 65)
-                  << QPointF(-65, 65) << QPointF(0, -75);
 
-        textItem = new QGraphicsTextItem("Base :\nAltitude :\nHypotenuse :\nHeight :", this);
-        textItem->setPos(-40, 10);
         setPolygon(myPolygon);
-        break;
-    case Circle:
+     case Circle:
         path.addEllipse(QPointF(0, 0), 50, 50);
         myPolygon = path.toFillPolygon();
-        textItem = new QGraphicsTextItem("Radius : ", this);
-        textItem->setPos(-20, -10);
         setPolygon(myPolygon);
         break;
-
-    default:
+   default:
         myPolygon << QPointF(-60, -40) << QPointF(-35, 40)
                   << QPointF(60, 40) << QPointF(35, -40)
                   << QPointF(-60, -40);
@@ -83,35 +42,6 @@ CustomItem::CustomItem(CustomType customType, QMenu *contextMenu, QGraphicsItem 
     setAcceptHoverEvents(true);
 }
 
-void CustomItem::setMainLabelText(const QString &text)
-{
-    if (textItem)
-        textItem->setPlainText(text);
-}
-
-void CustomItem::removeArrow(Arrow *arrow)
-{
-    int index = arrows.indexOf(arrow);
-
-    if (index != -1)
-        arrows.removeAt(index);
-}
-
-void CustomItem::removeArrows()
-{
-    foreach (Arrow *arrow, arrows)
-    {
-        arrow->startItem()->removeArrow(arrow);
-        arrow->endItem()->removeArrow(arrow);
-        scene()->removeItem(arrow);
-        delete arrow;
-    }
-}
-
-void CustomItem::addArrow(Arrow *arrow)
-{
-    arrows.append(arrow);
-}
 
 QPixmap CustomItem::image() const
 {
@@ -142,87 +72,6 @@ bool CustomItem::isCloseEnough(QPointF const& p1, QPointF const& p2)
     qreal delta = std::abs(p1.x() - p2.x()) + std::abs(p1.y() - p2.y());
     return delta < closeEnoughDistance;
 }
-
-CustomItem* CustomItem::clone()
-{
-    CustomItem* cloned = new CustomItem(myCustomType, myContextMenu, nullptr);
-    cloned->myPolygon = myPolygon;
-    cloned->setPos(scenePos());
-    cloned->setPolygon(myPolygon);
-    cloned->setBrush(brush());
-    cloned->setZValue(zValue());
-    return cloned;
-}
-
-void CustomItem::setRectangleProperty()
-{
-    bool ok;
-
-    double length = QInputDialog::getDouble(nullptr, "Enter Rectangle Length:", "Length:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    double width = QInputDialog::getDouble(nullptr, "Enter Rectangle Width:", "Width:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    rectangleArea = length * width;
-    rectanglePerimeter = 2 * (length + width);
-
-    textItem->setPlainText("Length : " + QString::number(length) + "\nWidth : " + QString::number(width));
-    textItem->setPos(-40,-40);
-
-    qDebug() << "Rectangle Property" << length << " " << width << rectangleArea << rectanglePerimeter;
-}
-
-void CustomItem::setCircleProperty()
-{
-    bool ok;
-    double radius = QInputDialog::getDouble(nullptr, "Enter Circle Radius:", "Radius:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    textItem->setPlainText("Radius : " + QString::number(radius));
-    textItem->setPos(-20,-10);
-    circleArea = 3.14 * radius * radius;
-    circleCircumference = 2 * 3.14 * radius;
-
-    qDebug() << "Circle Property" << circleArea << " " << circleCircumference;
-}
-
-void CustomItem::setTriangleProperty()
-{
-    bool ok;
-
-    double base = QInputDialog::getDouble(nullptr, "Enter Base:", "Base:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    double height = QInputDialog::getDouble(nullptr, "Enter Height:", "Height:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    double altitude = QInputDialog::getDouble(nullptr, "Enter Altitude:", "Altitude:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    double hypotenuse = QInputDialog::getDouble(nullptr, "Enter Hypotenuse:", "Hypotenuse:", 0, 0, 10000, 2, &ok);
-    if (!ok) return;
-
-    triangleArea = (base * height) / 2;
-    trianglePerimeter = altitude + base + hypotenuse;
-
-    textItem->setPlainText("Base : "+QString::number(base)+"\nAltitude : "+QString::number(altitude)+""
-                                                                                                     "\nHypotenuse :"+QString::number(hypotenuse)+"\nHeight : " + QString::number(height));
-    textItem->setPos(-40,-10);
-
-    qDebug() << "Triangle Property " << base << " " << height << " " << triangleArea << " " << trianglePerimeter;
-}
-
-void CustomItem::setPolygonProperty()
-{
-    qDebug() << "Polygon Property";
-}
-
-void CustomItem::setDiamondProperty()
-{
-    qDebug() << "Diamond Property";
-}
-
 
 void CustomItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
@@ -356,58 +205,6 @@ void CustomItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     myContextMenu->exec(event->screenPos());
 }
 
-QVariant CustomItem::itemChange(GraphicsItemChange change, const QVariant &value)
-{
-    if (change == QGraphicsItem::ItemPositionChange)
-    {
-        foreach (Arrow *arrow, arrows)
-        {
-            arrow->updatePosition();
-        }
-    }
-    return QGraphicsPolygonItem::itemChange(change, value);
-}
-
-
-void CustomItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
-{
-    Q_UNUSED(event);
-
-    switch (myCustomType) {
-    case Diamond:
-        qDebug() << "Diamond double-clicked";
-        setDiamondProperty();
-        break;
-    case Rectangle:
-        qDebug() << "Rectangle double-clicked";
-        setRectangleProperty();
-        break;
-    case Triangle:
-        qDebug() << "Triangle double-clicked";
-        setTriangleProperty();
-        break;
-    case Circle:
-        qDebug() << "Circle double-clicked";
-        setCircleProperty();
-        break;
-    case Polygon:
-        qDebug() << "Polygon double-clicked";
-        setPolygonProperty();
-        break;
-    case Output:
-        qDebug() << "Output double-clicked";
-        performArithmeticOperation();
-        break;
-    case Io:
-        qDebug() << "IO double-clicked";
-        bool ok;
-        QString text = QInputDialog::getText(nullptr, "Set Value", "Enter the value:", QLineEdit::Normal, "", &ok);
-        break;
-
-    }
-}
-
-
 QPolygonF CustomItem::scaledPolygon(const QPolygonF& old, CustomItem::Direction direction, const QPointF& newPos)
 {
     qreal oldWidth = old.boundingRect().width();
@@ -474,64 +271,4 @@ QPolygonF CustomItem::scaledPolygon(const QPolygonF& old, CustomItem::Direction 
     QTransform trans;
     trans.scale(scaleWidth, scaleHeight);
     return trans.map(old);
-}
-
-bool CustomItem::areConnectedToConditionalItems()
-{
-    foreach (Arrow *arrow, arrows)
-    {
-        if (arrow->startItem()->type() == Diamond || arrow->endItem()->type() == Diamond)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-void CustomItem::performArithmeticOperation() {
-    qDebug() << "Performing arithmetic operation";
-    foreach (Arrow *arrow, arrows) {
-        CustomItem *startItem = dynamic_cast<CustomItem*>(arrow->startItem());
-        CustomItem *endItem = dynamic_cast<CustomItem*>(arrow->endItem());
-
-        if (startItem && endItem)
-        {
-            qDebug() << "Start Item Type: " << startItem->myCustomType << " End Item Type: " << endItem->myCustomType;
-            if (startItem->myCustomType == Rectangle && endItem->myCustomType == Output)
-            {
-                qDebug() << "Rectangle Property" << rectangleArea << " " << rectanglePerimeter;
-                textItem->setPlainText("Area : " + QString::number(rectangleArea) + "\nPerimeter : " + QString::number(rectanglePerimeter));
-                textItem->setPos(-40, -20);
-
-            }
-            else if (startItem->myCustomType == Triangle && endItem->myCustomType == Output)
-            {
-                qDebug() << "Triangle Property" << triangleArea << " " << trianglePerimeter;
-                textItem->setPlainText("Area : " + QString::number(triangleArea) + "\nPerimeter : " + QString::number(trianglePerimeter));
-                textItem->setPos(-40, -20);
-            }
-            else if (startItem->myCustomType == Circle && endItem->myCustomType == Output)
-            {
-                qDebug() << "Circle Property" << circleArea << " " << circleCircumference;
-                textItem->setPlainText("Area : " + QString::number(circleArea) + "\nPerimeter : " + QString::number(circleCircumference));
-                textItem->setPos(-40, -20);
-            }
-            else if (startItem->myCustomType == Diamond && endItem->myCustomType == Output)
-            {
-                qDebug() << "Diamond item is connected to Output";
-            }
-            else if (startItem->myCustomType == Polygon && endItem->myCustomType == Output)
-            {
-                qDebug() << "Polygon item is connected to Output";
-            }
-            else
-            {
-                qDebug() << "Unhandled arithmetic operation case";
-            }
-        }
-        else
-        {
-            qDebug() << "Arrow connection issue: startItem or endItem is null";
-        }
-    }
 }
