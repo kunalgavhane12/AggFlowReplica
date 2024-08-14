@@ -14,6 +14,7 @@
 #include <QPushButton>
 #include <QColorDialog>
 #include <QInputDialog>
+#include <QTableView>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -175,6 +176,13 @@ void MainWindow::connectUI()
     connect(tabPlant, &QTabWidget::currentChanged, this, &MainWindow::addNewPlantTab);
     connect(tabPlant, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlantTab);
     connect(tabPage, &QTabWidget::tabCloseRequested, this, &MainWindow::closePageTab);
+
+    //reportConnection triggered
+    connect(createReportForSelectedItems, &QAction::triggered, this, &MainWindow::createReportSelectedItems);
+    connect(createReportForAllItemsOnWorksheet, &QAction::triggered, this, &MainWindow::createReportSelectedItems);
+    connect(createEmissionReportForSelectedItems, &QAction::triggered, this, &MainWindow::createEmissionReportSelectedItems);
+    connect(createEmissionReportForAllItemsOnWorksheet, &QAction::triggered, this, &MainWindow::createEmissionReportSelectedItems);
+    connect(setTitleAndPrintOptions, &QAction::triggered, this, &MainWindow::openFile);
 }
 
 void MainWindow::createTabs()
@@ -952,3 +960,117 @@ void MainWindow::closePageTab(int index)
         qDebug() << "No widget found at index" << index;
     }
 }
+
+void MainWindow::createReportSelectedItems()
+{
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle("Results");
+    dialog->setFixedWidth(650);
+    dialog->setFixedHeight(400);
+
+    QLabel *headerLabel = new QLabel("AggFlow Results. Select print and export options below:", dialog);
+
+    QTableView *tableView = new QTableView(dialog);
+
+    // Create a model for the QTableView
+    QStandardItemModel *model = new QStandardItemModel(0, 5, dialog);
+    model->setHeaderData(0, Qt::Horizontal, "Machine");
+    model->setHeaderData(1, Qt::Horizontal, "Stream");
+    model->setHeaderData(2, Qt::Horizontal, "----");
+    model->setHeaderData(3, Qt::Horizontal, "TPH");
+    model->setHeaderData(4, Qt::Horizontal, "Power");
+
+    // Set the model to the table view
+    tableView->setModel(model);
+
+    // Layouts
+    QVBoxLayout *mainLayout = new QVBoxLayout(dialog);
+    QHBoxLayout *mainContentLayout = new QHBoxLayout();
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+
+    // Add widgets to the layouts
+    mainContentLayout->addWidget(tableView);    // Add table view
+
+    // Buttons
+    QPushButton *button1 = new QPushButton("Export Results", dialog);
+    QPushButton *button2 = new QPushButton("Copy Results to Excel", dialog);
+    QPushButton *button3 = new QPushButton("Print", dialog);
+    QPushButton *button4 = new QPushButton("Export To PDF", dialog);
+    QPushButton *button5 = new QPushButton("Close", dialog);
+
+    buttonLayout->addWidget(button1);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(button2);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(button3);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(button4);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(button5);
+
+    // Assemble the main layout
+    mainLayout->addWidget(headerLabel);
+    mainLayout->addLayout(mainContentLayout);
+    mainLayout->addLayout(buttonLayout);
+
+    dialog->setLayout(mainLayout);
+    dialog->exec();
+}
+
+void MainWindow::createEmissionReportSelectedItems()
+{
+    QDialog *dialog = new QDialog(this);
+    dialog->setWindowTitle("Emissions");
+    dialog->setFixedWidth(650);
+    dialog->setFixedHeight(400);
+
+    QLabel *headerLabel = new QLabel("AggFlow Results. Select print and export options below:", dialog);
+
+    QTableView *tableView = new QTableView(dialog);
+
+    // Create a model for the QTableView
+    QStandardItemModel *model = new QStandardItemModel(0, 6, dialog); // 0 rows, 6 columns
+    model->setHeaderData(0, Qt::Horizontal, "Machine");
+    model->setHeaderData(1, Qt::Horizontal, "ID");
+    model->setHeaderData(2, Qt::Horizontal, "TPH");
+    model->setHeaderData(3, Qt::Horizontal, "Total\nEmission");
+    model->setHeaderData(4, Qt::Horizontal, "Factor");
+    model->setHeaderData(5, Qt::Horizontal, "Emission Table");
+
+    // Set the model to the table view
+    tableView->setModel(model);
+
+    // Layouts
+    QVBoxLayout *mainLayout = new QVBoxLayout(dialog);
+    QHBoxLayout *mainContentLayout = new QHBoxLayout();
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+
+    // Add widgets to the layouts
+    mainContentLayout->addWidget(tableView);
+
+    // Buttons
+    QPushButton *Exportbutton = new QPushButton("Export Results", dialog);
+    QPushButton *CopyToExcelbutton = new QPushButton("Copy Results to Excel", dialog);
+    QPushButton *Printbutton = new QPushButton("Print", dialog);
+    QPushButton *ExportToPDFbutton = new QPushButton("Export To PDF", dialog);
+    QPushButton *Closebutton = new QPushButton("Close", dialog);
+
+    buttonLayout->addWidget(Exportbutton);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(CopyToExcelbutton);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(Printbutton);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(ExportToPDFbutton);
+    buttonLayout->addStretch(1);
+    buttonLayout->addWidget(Closebutton);
+
+    // Assemble the main layout
+    mainLayout->addWidget(headerLabel);
+    mainLayout->addLayout(mainContentLayout);
+    mainLayout->addLayout(buttonLayout);
+
+    dialog->setLayout(mainLayout);
+    dialog->exec();
+}
+

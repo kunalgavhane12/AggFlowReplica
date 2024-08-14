@@ -38,6 +38,8 @@ private slots:
     void addNewPageTab(int index);
     void closePlantTab(int index);
     void closePageTab(int index);
+    void createReportSelectedItems();
+    void createEmissionReportSelectedItems();
 
 private:
     void SetupUI();
