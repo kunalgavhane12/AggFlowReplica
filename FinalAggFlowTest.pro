@@ -13,9 +13,7 @@ SOURCES += \
     arrowlineitem.cpp \
     customdelegate.cpp \
     customgraphicsview.cpp \
-#    customitem.cpp \
     custompixmapitem.cpp \
-#    customtextitem.cpp \
     main.cpp \
     mainwindow.cpp
 HEADERS += \
@@ -23,9 +21,7 @@ HEADERS += \
     arrowlineitem.h \
     customdelegate.h \
     customgraphicsview.h \
-#    customitem.h \
     custompixmapitem.h \
-#    customtextitem.h \
     mainwindow.h
 
 FORMS += \
