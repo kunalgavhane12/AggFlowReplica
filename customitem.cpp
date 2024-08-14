@@ -1,274 +1,200 @@
 #include "customitem.h"
-#include <QGraphicsScene>
-#include <QGraphicsSceneContextMenuEvent>
-#include <QMenu>
-#include <QPainter>
-#include <QDebug>
-#include <QStyleOptionGraphicsItem>
-#include <QInputDialog>
-#include <QMessageBox>
-
 
 CustomItem::CustomItem(QGraphicsItem *parent)
-    : QGraphicsPolygonItem(parent)
+    : QGraphicsPolygonItem(parent),
+      myCustomType(None),
+      resizeMode(false),
+      scaleDirection(TopLeft),
+      isMoved(false),
+      isResized(false)
 {
-
-    QPainterPath path;
-    QPixmap pixmap;
-    switch (myCustomType) {
-
-    case Rectangle:
-        myPolygon << QPointF(-60, -60) << QPointF(60, -60)
-                  << QPointF(60, 60) << QPointF(-60, 60)
-                  << QPointF(-60, -60);
-
-        setPolygon(myPolygon);
-     case Circle:
-        path.addEllipse(QPointF(0, 0), 50, 50);
-        myPolygon = path.toFillPolygon();
-        setPolygon(myPolygon);
-        break;
-   default:
-        myPolygon << QPointF(-60, -40) << QPointF(-35, 40)
-                  << QPointF(60, 40) << QPointF(35, -40)
-                  << QPointF(-60, -40);
-        setPolygon(myPolygon);
-        break;
-    }
-
-    setFlag(QGraphicsItem::ItemIsMovable, true);
-    setFlag(QGraphicsItem::ItemIsSelectable, true);
-    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    setFlag(QGraphicsItem::ItemIsMovable);
+    setFlag(QGraphicsItem::ItemIsSelectable);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges);
     setAcceptHoverEvents(true);
-}
-
-
-QPixmap CustomItem::image() const
-{
-    QPixmap pixmap(250, 250);
-    pixmap.fill(Qt::transparent);
-    QPainter painter(&pixmap);
-    painter.setPen(QPen(Qt::black, 8));
-    painter.translate(125, 125);
-    painter.drawPolyline(myPolygon);
-
-    return pixmap;
 }
 
 QList<QPointF> CustomItem::resizeHandlePoints()
 {
-    qreal width = resizeHandlePointWidth;
-    QRectF rf = QRectF(boundingRect().topLeft() + QPointF(width/2, width/2),
-                       boundingRect().bottomRight() - QPointF(width/2, width/2));
-    qreal centerX = rf.center().x();
-    qreal centerY = rf.center().y();
-    return QList<QPointF>{rf.topLeft(), QPointF(centerX, rf.top()), rf.topRight(),
-                QPointF(rf.left(), centerY), QPointF(rf.right(), centerY),
-                rf.bottomLeft(), QPointF(centerX, rf.bottom()), rf.bottomRight()};
+    QList<QPointF> points;
+    QRectF rect = boundingRect();
+    points << rect.topLeft()
+           << QPointF(rect.center().x(), rect.top())  // top center
+           << rect.topRight()
+           << QPointF(rect.left(), rect.center().y()) // left center
+           << QPointF(rect.right(), rect.center().y()) // right center
+           << rect.bottomLeft()
+           << QPointF(rect.center().x(), rect.bottom()) // bottom center
+           << rect.bottomRight();
+    return points;
 }
 
-bool CustomItem::isCloseEnough(QPointF const& p1, QPointF const& p2)
+
+bool CustomItem::isCloseEnough(const QPointF &p1, const QPointF &p2)
 {
-    qreal delta = std::abs(p1.x() - p2.x()) + std::abs(p1.y() - p2.y());
-    return delta < closeEnoughDistance;
+    return QLineF(p1, p2).length() < closeEnoughDistance;
 }
 
-void CustomItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
+void CustomItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-    resizeMode = false;
-    int index = 0;
+    movingStartPosition = event->pos();
+    isMoved = false;
+    isResized = false;
 
-    if (dynamic_cast<QGraphicsPixmapItem*>(this))
-    {
-        QGraphicsItem::mousePressEvent(event);
-        return;
-    }
-    QGraphicsPolygonItem::mousePressEvent(event);
-
-    foreach (QPointF const& p, resizeHandlePoints())
-    {
-        if (isCloseEnough(event->pos(), p))
-        {
+    QList<QPointF> points = resizeHandlePoints();
+    for (int i = 0; i < points.size(); ++i) {
+        if (isCloseEnough(event->pos(), points.at(i))) {
             resizeMode = true;
+            scaleDirection = static_cast<Direction>(i);
             break;
         }
-        index++;
     }
-    scaleDirection = static_cast<Direction>(index);
-    setFlag(GraphicsItemFlag::ItemIsMovable, !resizeMode);
-    if (resizeMode)
-    {
-        qDebug() << "begin resizing";
-        previousPolygon = polygon();
-        event->accept();
-    }
-    else
-    {
-        qDebug() << "item type " << this->type() << " start moving from" << scenePos();
-        movingStartPosition = scenePos();
-        QGraphicsItem::mousePressEvent(event);
+
+    if (!resizeMode) {
+        QGraphicsPolygonItem::mousePressEvent(event);
     }
 }
 
-void CustomItem::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
+void CustomItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (dynamic_cast<QGraphicsPixmapItem*>(this))
-    {
-        QGraphicsItem::mouseMoveEvent(event);
-        return;
+    if (resizeMode) {
+        QPolygonF newPolygon = scaledPolygon(myPolygon, scaleDirection, event->pos());
+        setPolygon(newPolygon);
+        isResized = true;
+    } else {
+        isMoved = true;
+        QGraphicsPolygonItem::mouseMoveEvent(event);
     }
-    QGraphicsPolygonItem::mouseMoveEvent(event);
-    if (resizeMode)
-    {
-        prepareGeometryChange();
-        myPolygon = scaledPolygon(myPolygon, scaleDirection, event->pos());
-        setPolygon(myPolygon);
-    }
-    QGraphicsItem::mouseMoveEvent(event);
 }
 
-void CustomItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
+void CustomItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (dynamic_cast<QGraphicsPixmapItem*>(this))
-    {
-        QGraphicsItem::mouseReleaseEvent(event);
-        return;
+    if (!resizeMode && isMoved) {
+        // Finalize movement
+    } else if (resizeMode && isResized) {
+        // Finalize resizing
     }
-    QGraphicsPolygonItem::mouseReleaseEvent(event);
-    if (resizeMode)
-    {
-        qDebug() << "after resizing";
-        if (polygon() != previousPolygon)
-        {
-            isResized = true;
-        }
-    }
-    else
-    {
-        qDebug() << "\tend moving in" << scenePos();
-        if (scenePos() != movingStartPosition)
-        {
-            isMoved = true;
-            qDebug() << "-- " << scenePos() << movingStartPosition;
-        }
-    }
+
     resizeMode = false;
-    QGraphicsItem::mouseReleaseEvent(event);
+    isMoved = false;
+    isResized = false;
+    QGraphicsPolygonItem::mouseReleaseEvent(event);
 }
 
-void CustomItem::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
+void CustomItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 {
-    setCursor(Qt::ArrowCursor);
-    int index = 0;
-    foreach (QPointF const& p, resizeHandlePoints())
-    {
-        if (isCloseEnough(p, event->pos()))
-        {
-            switch (static_cast<Direction>(index)) {
-            case TopLeft:
-            case BottomRight: setCursor(Qt::SizeFDiagCursor); break;
-            case Top:
-            case Bottom: setCursor(Qt::SizeVerCursor); break;
-            case TopRight:
-            case BottomLeft: setCursor(Qt::SizeBDiagCursor); break;
-            case Left:
-            case Right: setCursor(Qt::SizeHorCursor); break;
+    QList<QPointF> points = resizeHandlePoints();
+    bool overHandle = false;
+
+    for (const QPointF &point : points) {
+        if (isCloseEnough(event->pos(), point)) {
+            overHandle = true;
+            break;
+        }
+    }
+
+    if (overHandle) {
+        setCursor(Qt::SizeFDiagCursor);
+    } else {
+        setCursor(Qt::ArrowCursor);
+    }
+
+    QGraphicsPolygonItem::hoverMoveEvent(event);
+}
+
+void CustomItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    switch (myCustomType) {
+        case Rectangle:
+            painter->drawRect(myPolygon.boundingRect());
+            break;
+        case Circle:
+            painter->drawEllipse(myPolygon.boundingRect());
+            break;
+        case Line:
+            if (myPolygon.size() > 1) {
+                painter->drawLine(myPolygon.at(0), myPolygon.at(1));
             }
             break;
+        case PolygonLine:
+            painter->drawPolygon(myPolygon);
+            break;
+        case ArrowLine:
+            if (myPolygon.size() > 1) {
+                painter->drawLine(myPolygon.at(0), myPolygon.at(1));
+                // Drawing arrowhead can be added here if needed
+            }
+            break;
+        case None:
+        default:
+            // No specific shape to draw
+            break;
+    }
+
+    // Call the base class implementation to draw selection/hover indicators
+    QGraphicsPolygonItem::paint(painter, option, widget);
+
+    // Draw resize handles if selected
+    if (isSelected()) {
+        painter->setPen(QPen(Qt::DashLine));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawRect(boundingRect());
+
+        QList<QPointF> points = resizeHandlePoints();
+        painter->setPen(QPen(Qt::SolidLine));
+        painter->setBrush(Qt::black);
+
+        for (const QPointF &point : points) {
+            QRectF handleRect(point.x() - resizeHandlePointWidth / 2, point.y() - resizeHandlePointWidth / 2, resizeHandlePointWidth, resizeHandlePointWidth);
+            painter->drawRect(handleRect);
         }
-        index++;
-    }
-    QGraphicsItem::hoverMoveEvent(event);
-}
-
-void CustomItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
-{
-    QStyleOptionGraphicsItem myOption(*option);
-    myOption.state &= ~QStyle::State_Selected;
-    QGraphicsPolygonItem::paint(painter, &myOption, widget);
-
-    // add resize handles
-    if (this->isSelected())
-    {
-        qreal width = resizeHandlePointWidth;
-        foreach(QPointF const& point, resizeHandlePoints())
-        {
-            painter->drawEllipse(QRectF(point.x() - width/2, point.y() - width/2, width, width));
-        }
     }
 }
 
-void CustomItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-    scene()->clearSelection();
-    setSelected(true);
-    myContextMenu->exec(event->screenPos());
-}
 
-QPolygonF CustomItem::scaledPolygon(const QPolygonF& old, CustomItem::Direction direction, const QPointF& newPos)
+QPolygonF CustomItem::scaledPolygon(const QPolygonF &old, Direction direction, const QPointF &newPos)
 {
-    qreal oldWidth = old.boundingRect().width();
-    qreal oldHeight = old.boundingRect().height();
-    qreal scaleWidth, scaleHeight;
-    switch(direction)
-    {
-    case TopLeft:
-    {
-        QPointF fixPoint = old.boundingRect().bottomRight();
-        scaleWidth = (fixPoint.x() - newPos.x()) / oldWidth;
-        scaleHeight = (fixPoint.y() - newPos.y()) / oldHeight;
-        break;
+    QPolygonF newPolygon = old;
+
+    QRectF rect = old.boundingRect();
+    switch (direction) {
+        case TopLeft:
+            rect.setTopLeft(newPos);
+            break;
+        case Top:
+            rect.setTop(newPos.y());
+            break;
+        case TopRight:
+            rect.setTopRight(newPos);
+            break;
+        case Left:
+            rect.setLeft(newPos.x());
+            break;
+        case Right:
+            rect.setRight(newPos.x());
+            break;
+        case BottomLeft:
+            rect.setBottomLeft(newPos);
+            break;
+        case Bottom:
+            rect.setBottom(newPos.y());
+            break;
+        case BottomRight:
+            rect.setBottomRight(newPos);
+            break;
     }
-    case Top:
-    {
-        QPointF fixPoint = old.boundingRect().bottomLeft();
-        scaleWidth = 1;
-        scaleHeight = (fixPoint.y() - newPos.y()) / oldHeight;
-        break;
+
+    QPolygonF scaledPolygon;
+    for (const QPointF &point : old) {
+        qreal xRatio = (point.x() - rect.left()) / rect.width();
+        qreal yRatio = (point.y() - rect.top()) / rect.height();
+        scaledPolygon << QPointF(rect.left() + xRatio * rect.width(), rect.top() + yRatio * rect.height());
     }
-    case TopRight:
-    {
-        QPointF fixPoint = old.boundingRect().bottomLeft();
-        scaleWidth = (newPos.x() - fixPoint.x()) / oldWidth;
-        scaleHeight = (fixPoint.y() - newPos.y() ) / oldHeight;
-        break;
-    }
-    case Right:
-    {
-        QPointF fixPoint = old.boundingRect().bottomLeft();
-        scaleWidth = (newPos.x() - fixPoint.x()) / oldWidth;
-        scaleHeight = 1;
-        break;
-    }
-    case BottomRight:
-    {
-        QPointF fixPoint = old.boundingRect().topLeft();
-        scaleWidth = (newPos.x() - fixPoint.x()) / oldWidth;
-        scaleHeight = (newPos.y() - fixPoint.y()) / oldHeight;
-        break;
-    }
-    case Bottom:
-    {
-        QPointF fixPoint = old.boundingRect().topLeft();
-        scaleWidth = 1;
-        scaleHeight = (newPos.y() - fixPoint.y()) / oldHeight;
-        break;
-    }
-    case BottomLeft: {
-        QPointF fixPoint = old.boundingRect().topRight();
-        scaleWidth = (fixPoint.x() - newPos.x()) / oldWidth;
-        scaleHeight = (newPos.y() - fixPoint.y()) / oldHeight;
-        break;
-    }
-    case Left:
-    {
-        QPointF fixPoint = old.boundingRect().bottomRight();
-        scaleWidth = (fixPoint.x() - newPos.x()) / oldWidth;
-        scaleHeight = 1;
-        break;
-    }
-    }
-    QTransform trans;
-    trans.scale(scaleWidth, scaleHeight);
-    return trans.map(old);
+
+    return scaledPolygon;
 }

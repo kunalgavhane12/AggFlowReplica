@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
     createActions();
     createMenus();
     createToolbar();
+    connectUI();
+    graphicsView->setFixedSizeAndScene(QSize(600, 400));
 
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
@@ -47,10 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
     status->setText("<span style='font-size: 16px; font-weight: bold;'>Result : 0</span>");
     statusBar()->addPermanentWidget(status);
 
-    connect(tabPlant, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlantTab);
-    connect(tabPage, &QTabWidget::tabCloseRequested, this, &MainWindow::closePageTab);
-    connect(tabPage, &QTabWidget::currentChanged, this, &MainWindow::addNewPageTab);
-    connect(tabPlant, &QTabWidget::currentChanged, this, &MainWindow::addNewPlantTab);
+
 }
 
 void MainWindow::onClear()
@@ -151,6 +150,33 @@ void MainWindow::SetupUI()
     setMinimumSize(800, 650);
     statusBar();
 }
+
+void MainWindow::connectUI()
+{
+    connect(newAction, &QAction::triggered, this, &MainWindow::newFile);
+    connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
+    connect(saveAction, &QAction::triggered, this, &MainWindow::onSave);
+    connect(saveAsAction, &QAction::triggered, this, &MainWindow::onSaveAs);
+    connect(loadAction, &QAction::triggered, this, &MainWindow::onLoad);
+    connect(clearAction, &QAction::triggered, this, &MainWindow::onClear);
+    connect(closeAction, &QAction::triggered, this, &MainWindow::close);
+    connect(undoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::UndoTriggered);
+    connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
+    connect(zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
+    connect(zoomOutAction, &QAction::triggered, this, &MainWindow::zoomOut);
+    connect(zoomToFitAction, &QAction::triggered, this, &MainWindow::zoomToFit);
+    connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
+    connect(graphicsView, &CustomGraphicsView::PublishOldData, this, &MainWindow::onOldPos);
+    connect(graphicsView, &CustomGraphicsView::PublishNewData, this, &MainWindow::onNewPos);
+    connect(graphicsView, &CustomGraphicsView::PublishUndoData, this, &MainWindow::onUndoPos);
+    connect(graphicsView, &CustomGraphicsView::PublishRedoData, this, &MainWindow::onRedoPos);
+    connect(graphicsView, &CustomGraphicsView::resultUpdated, this, &MainWindow::updateResult);
+    connect(tabPage, &QTabWidget::currentChanged, this, &MainWindow::addNewPageTab);
+    connect(tabPlant, &QTabWidget::currentChanged, this, &MainWindow::addNewPlantTab);
+    connect(tabPlant, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlantTab);
+    connect(tabPage, &QTabWidget::tabCloseRequested, this, &MainWindow::closePageTab);
+}
+
 void MainWindow::createTabs()
 {
     QWidget *tab1 = new QWidget(this);
@@ -161,8 +187,6 @@ void MainWindow::createTabs()
 
     QWidget *tab2 = new QWidget(this);
     tabPlant->addTab(tab2, "+ Stage");
-
-    graphicsView->setFixedSizeAndScene(QSize(600, 400));  // Set fixed size
     tabPage->addTab(graphicsView, "Page #1");
     tabPage->addTab(new QWidget(this), "+ Page");
 
@@ -204,9 +228,6 @@ void MainWindow::onItemClicked(int index)
                      QIcon(":/icons/dragIcon/place_a_surge_bin_in_the_flow.png"),
                      QIcon(":/icons/dragIcon/bucket_elevator.png"),
                      QIcon(":/icons/dragIcon/screw_conveyor.png")};
-        //        connect(listView, &QListView::clicked, [this](const QModelIndex &index) {
-        //            onDrawingModeSelected(index.row());
-        //        });
         break;
     case 3:
         menuIcons = {QIcon(":/icons/dragIcon/place_a_splitter_in_the_flow.png"),
@@ -526,7 +547,6 @@ void MainWindow::createActions()
     clearAction->setStatusTip(tr("Clear"));
     clearAction->setShortcut(tr("Ctrl+L"));
 
-
     undoAction = new QAction(tr("&Graphical Undo"), this);
     undoAction->setShortcut(tr("Ctrl+Z"));
     undoAction->setStatusTip(tr("Undo last operation"));
@@ -593,16 +613,16 @@ void MainWindow::createActions()
     drawOrthogonalAction->setShortcut(tr("F3"));
     drawOrthogonalAction->setIcon(QIcon(":/icons/images/draw_orthogonal.png"));
 
-    metricAction = new QAction(tr("&Metric"), this);
-    imperialAction = new QAction(tr("&Imperial"), this);
+    metricAction = new QAction(tr("Metric"), this);
+    imperialAction = new QAction(tr("Imperial"), this);
 
-    displayWaterAction = new QAction(tr("&Display Clean Water Equipment"), this);
+    displayWaterAction = new QAction(tr("Display Clean Water Equipment"), this);
     displayWaterAction->setIcon(QIcon(":/icons/images/displayCleanWater.png"));
 
-    displayToolbarAction = new QAction(tr("&Display Toolbar"), this);
+    displayToolbarAction = new QAction(tr("Display Toolbar"), this);
     displayToolbarAction->setIcon(QIcon(":/icons/images/displayToolbar.png"));
 
-    displayToolTipsAction = new QAction(tr("&Display Tool Tips"), this);
+    displayToolTipsAction = new QAction(tr("Display Tool Tips"), this);
     displayToolTipsAction->setIcon(QIcon(":/icons/images/displayToolbarTip.png"));
 
     runStage = new QAction(tr("Run Stage"), this);
@@ -671,30 +691,6 @@ void MainWindow::createActions()
     aggFlowLicense->setIcon(QIcon(":/icons/images/liencseAggrement.png"));
     about = new QAction(tr("&About"), this);
     about->setIcon(QIcon(":/icons/images/about.png"));
-
-
-    connect(newAction, &QAction::triggered, this, &MainWindow::newFile);
-    connect(openAction, &QAction::triggered, this, &MainWindow::openFile);
-    connect(saveAction, &QAction::triggered, this, &MainWindow::onSave);
-    connect(saveAsAction, &QAction::triggered, this, &MainWindow::onSaveAs);
-    connect(loadAction, &QAction::triggered, this, &MainWindow::onLoad);
-    connect(clearAction, &QAction::triggered, this, &MainWindow::onClear);
-    connect(closeAction, &QAction::triggered, this, &MainWindow::close);
-    connect(undoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::UndoTriggered);
-    connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
-    connect(zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
-    connect(zoomOutAction, &QAction::triggered, this, &MainWindow::zoomOut);
-    connect(zoomToFitAction, &QAction::triggered, this, &MainWindow::zoomToFit);
-    connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
-    connect(graphicsView, &CustomGraphicsView::PublishOldData, this, &MainWindow::onOldPos);
-    connect(graphicsView, &CustomGraphicsView::PublishNewData, this, &MainWindow::onNewPos);
-    connect(graphicsView, &CustomGraphicsView::PublishUndoData, this, &MainWindow::onUndoPos);
-    connect(graphicsView, &CustomGraphicsView::PublishRedoData, this, &MainWindow::onRedoPos);
-    connect(graphicsView, &CustomGraphicsView::resultUpdated, this, &MainWindow::updateResult);
-    connect(tabPlant, &QTabWidget::tabBarClicked, this, &MainWindow::addNewPlantTab);
-    connect(tabPlant, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlantTab);
-    connect(tabPage, &QTabWidget::tabBarClicked, this, &MainWindow::addNewPageTab);
-    connect(tabPage, &QTabWidget::tabCloseRequested, this, &MainWindow::closePageTab);
 }
 
 void MainWindow::createToolbar()

@@ -13,6 +13,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
+    enum Mode {
+        Normal,
+        Drawing
+    };
     MainWindow(QWidget *parent = nullptr);
 
 private slots:
@@ -37,6 +41,7 @@ private slots:
 
 private:
     void SetupUI();
+    void connectUI();
     void createTabs();
     void onItemClicked(int index);
     void createMenus();
@@ -142,7 +147,7 @@ private:
     QAction *about;
     QString currentFile;
     qreal zoomFactor;
-
+    Mode currentMode = Normal;
 };
 
 #endif // MAINWINDOW_H

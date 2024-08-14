@@ -7,6 +7,7 @@
 #include <QPointF>
 #include <QMap>
 #include <QPolygonF>
+#include <QPainterPath>
 #include "CustomPixmapItem.h"
 #include "arrowlineitem.h"
 #include <QMenu>
@@ -31,6 +32,7 @@ public:
     CustomGraphicsView(QWidget *parent = nullptr);
     void ClearScene();
     void setFixedSizeAndScene(const QSize& size);
+
     enum DrawingMode {
         None,
         ArrowMode,
@@ -39,6 +41,11 @@ public:
         EllipseMode,
         RectangleMode
     };
+
+    enum Direction {TopLeft = 0, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight };
+    QList<QPointF> resizeHandlePoints();
+    bool isCloseEnough(QPointF const& p1, QPointF const& p2);
+
     void setDrawingMode(DrawingMode mode) {
         currentMode = mode;
         if (currentItem) {
@@ -47,6 +54,7 @@ public:
             currentItem = nullptr;
         }
     }
+
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -87,7 +95,7 @@ private:
     void EmitDebugData(QPoint pos);
     void AddItemToAddStack(QGraphicsItem *item);
     void AddItemToMoveStack(QGraphicsItem *item);
-    DrawingMode currentMode;
+
     QPointF startPoint;
     QGraphicsScene *scene;
     QGraphicsItem *currentItem;
@@ -101,6 +109,21 @@ private:
     QGraphicsItem *selectedItem = nullptr;
     QPointF itemStartPosition;
     QUndoStack* UndoStack;
+
+    QPolygonF scaledPolygon(QPolygonF const& old, Direction direction, QPointF const& newPos);
+    DrawingMode currentMode;
+    QPolygonF myPolygon;
+    QPainterPath path;
+    static constexpr qreal resizeHandlePointWidth = 5;
+    static constexpr qreal closeEnoughDistance = 5;
+    bool resizeMode = false;
+    Direction scaleDirection;
+
+    QPointF movingStartPosition;
+    bool isMoved = false;
+    QPolygonF previousPolygon;
+    bool isResized = false;
+
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H
