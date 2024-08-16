@@ -22,6 +22,7 @@
 #include <QApplication>
 #include <QDomDocument>
 #include <QBuffer>
+#include "resizablerectitem.h"
 
 using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
 
@@ -39,12 +40,9 @@ public:
         LineMode,
         PolylineMode,
         EllipseMode,
-        RectangleMode
+        RectangleMode,
+        ResizeMode
     };
-
-    enum Direction {TopLeft = 0, Top, TopRight, Left, Right, BottomLeft, Bottom, BottomRight };
-    QList<QPointF> resizeHandlePoints();
-    bool isCloseEnough(QPointF const& p1, QPointF const& p2);
 
     void setDrawingMode(DrawingMode mode) {
         currentMode = mode;
@@ -55,6 +53,11 @@ public:
         }
     }
 
+    void startDrawing(const QPointF &scenePos);
+    void handleProxyWidgetInteraction(const QPointF &scenePos, QGraphicsProxyWidget *proxyWidget);
+    void handleEllipseInteraction(const QPointF &scenePos, QGraphicsEllipseItem *ellipseItem);
+    void handleItemInteraction(const QPointF &scenePos, QGraphicsItem *item);
+    void handleResizeMode(const QPointF &scenePos, QGraphicsItem *item);
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -96,33 +99,22 @@ private:
     void AddItemToAddStack(QGraphicsItem *item);
     void AddItemToMoveStack(QGraphicsItem *item);
 
-    QPointF startPoint;
-    QGraphicsScene *scene;
-    QGraphicsItem *currentItem;
-    ArrowLineItem *currentLine;
-    QPointF lineStartPoint;
     LineConnectionsMap lineConnections;
+    QGraphicsScene *scene;
+    QGraphicsItem *currentItem = nullptr;
+    QGraphicsItem *selectedItem = nullptr;
+    ArrowLineItem *currentLine = nullptr;
+    QPointF startPoint;
+    QPointF lineStartPoint;
+    QPointF itemStartPosition;
     QMenu contextMenu;
     QAction *acnDel;
     QAction *acnSetVal;
     QAction *acnResult;
-    QGraphicsItem *selectedItem = nullptr;
-    QPointF itemStartPosition;
     QUndoStack* UndoStack;
-
-    QPolygonF scaledPolygon(QPolygonF const& old, Direction direction, QPointF const& newPos);
     DrawingMode currentMode;
-    QPolygonF myPolygon;
-    QPainterPath path;
-    static constexpr qreal resizeHandlePointWidth = 5;
-    static constexpr qreal closeEnoughDistance = 5;
-    bool resizeMode = false;
-    Direction scaleDirection;
-
-    QPointF movingStartPosition;
-    bool isMoved = false;
-    QPolygonF previousPolygon;
-    bool isResized = false;
+private:
+    ResizableRectItem *resizingItem = nullptr;
 
 };
 

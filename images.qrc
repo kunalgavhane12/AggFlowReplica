@@ -166,5 +166,6 @@
         <file>images/view_screen_size.png</file>
         <file>images/viewallcrusher.png</file>
         <file>images/run_save.png</file>
+        <file>images/ques.png</file>
     </qresource>
 </RCC>

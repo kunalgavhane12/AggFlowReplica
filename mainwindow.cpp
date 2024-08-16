@@ -15,6 +15,9 @@
 #include <QColorDialog>
 #include <QInputDialog>
 #include <QTableView>
+#include <QPrinter>
+#include <QPrintDialog>
+#include "userpreferences.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -37,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     createMenus();
     createToolbar();
     connectUI();
-    graphicsView->setFixedSizeAndScene(QSize(600, 400));
+    graphicsView->setFixedSizeAndScene(QSize(600, 500));
 
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
@@ -148,7 +151,7 @@ void MainWindow::SetupUI()
     hlayout->addWidget(groupBox);
     hlayout->addWidget(listView);
     hlayout->addWidget(tabPlant);
-    setMinimumSize(800, 650);
+    setMinimumSize(800, 700);
     statusBar();
 }
 
@@ -165,6 +168,7 @@ void MainWindow::connectUI()
     connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
     connect(zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
     connect(zoomOutAction, &QAction::triggered, this, &MainWindow::zoomOut);
+    connect(zoomToNormalAction, &QAction::triggered, this, &MainWindow::zoomToNormal);
     connect(zoomToFitAction, &QAction::triggered, this, &MainWindow::zoomToFit);
     connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
     connect(graphicsView, &CustomGraphicsView::PublishOldData, this, &MainWindow::onOldPos);
@@ -176,6 +180,29 @@ void MainWindow::connectUI()
     connect(tabPlant, &QTabWidget::currentChanged, this, &MainWindow::addNewPlantTab);
     connect(tabPlant, &QTabWidget::tabCloseRequested, this, &MainWindow::closePlantTab);
     connect(tabPage, &QTabWidget::tabCloseRequested, this, &MainWindow::closePageTab);
+
+    // print
+    connect(printAction, &QAction::triggered, this, &MainWindow::printCurrentContent);
+    connect(printAllAction, &QAction::triggered, this, &MainWindow::printAllContent);
+    connect(setUserPreference, &QAction::triggered, this, &MainWindow::setUserPreferences);
+    //export pdf
+    connect(pageToPdf, &QAction::triggered, this, &MainWindow::exportPageToPdf);
+    connect(pageWithResultToPDF, &QAction::triggered, this, &MainWindow::exportPageWithResultToPDF);
+    connect(pageToEPS, &QAction::triggered, this, &MainWindow::exportPageToEPS);
+    connect(pageWithResultToEPS, &QAction::triggered, this, &MainWindow::exportPageWithResultToEPS);
+    connect(pageToJPEG, &QAction::triggered, this, &MainWindow::exportPageToJPEG);
+    connect(pageToTIFFColor, &QAction::triggered, this, &MainWindow::exportPageToTIFFColor);
+    connect(pageToTIFFBW, &QAction::triggered, this, &MainWindow::exportPageToTIFFBW);
+    connect(plantToPdf, &QAction::triggered, this, &MainWindow::exportPlantToPdf);
+    connect(plantWithResultToPDF, &QAction::triggered, this, &MainWindow::exportPlantWithResultToPDF);
+    connect(plantToEPS, &QAction::triggered, this, &MainWindow::exportPlantToEPS);
+    connect(plantWithResultToEPS, &QAction::triggered, this, &MainWindow::exportPlantWithResultToEPS);
+
+    //Alignment
+    connect(topAction, &QAction::triggered, this, &MainWindow::on_actionTop_triggered);
+    connect(bottomAction, &QAction::triggered, this, &MainWindow::on_actionBottom_triggered);
+    connect(leftAction, &QAction::triggered, this, &MainWindow::on_actionLeft_triggered);
+    connect(rightAction, &QAction::triggered, this, &MainWindow::on_actionRight_triggered);
 
     //reportConnection triggered
     connect(createReportForSelectedItems, &QAction::triggered, this, &MainWindow::createReportSelectedItems);
@@ -862,6 +889,11 @@ void MainWindow::zoomOut()
     graphicsView->scale(1.0 / 1.5, 1.0 / 1.5);
 }
 
+void MainWindow::zoomToNormal()
+{
+    graphicsView->resetTransform();
+}
+
 void MainWindow::zoomToFit()
 {
     graphicsView->fitInView(graphicsView->sceneRect(), Qt::KeepAspectRatio);
@@ -882,7 +914,7 @@ void MainWindow::addNewPlantTab(int index)
         tabPlant->setCurrentIndex(tabPlant->count() - 2);
 
         CustomGraphicsView *newGraphicsView = new CustomGraphicsView(this);
-        newGraphicsView->setFixedSizeAndScene(QSize(600, 400));  // Set fixed size
+        newGraphicsView->setFixedSizeAndScene(QSize(600, 500));  // Set fixed size
         newPageTabWidget->addTab(newGraphicsView, "Page #1");
         newPageTabWidget->addTab(new QWidget(this), "+ Page");
         newPageTabWidget->setTabsClosable(true);
@@ -893,7 +925,7 @@ void MainWindow::addNewPageTab(int index)
 {
     if (index == tabPage->count() - 1) {
         CustomGraphicsView *newGraphicsView = new CustomGraphicsView(this);
-        newGraphicsView->setFixedSizeAndScene(QSize(600, 400));  // Set fixed size
+        newGraphicsView->setFixedSizeAndScene(QSize(600, 500));  // Set fixed size
         tabPage->insertTab(tabPage->count() - 1, newGraphicsView, tr("Page #%1").arg(tabPage->count()));
         tabPage->setCurrentIndex(tabPage->count() - 2);
     }
@@ -968,30 +1000,43 @@ void MainWindow::createReportSelectedItems()
     dialog->setFixedWidth(650);
     dialog->setFixedHeight(400);
 
-    QLabel *headerLabel = new QLabel("AggFlow Results. Select print and export options below:", dialog);
+    // Main Layout
+    QVBoxLayout *mainLayout = new QVBoxLayout(dialog);
 
+    // Header Label
+    QLabel *headerLabel = new QLabel("AggFlow Results. Select print and export options below:", dialog);
+    mainLayout->addWidget(headerLabel);
+
+    // Table Header Labels with Spacing
+    QVBoxLayout *headerLayout = new QVBoxLayout();
+    headerLayout->setSpacing(20); // Set spacing between labels
+
+    QLabel *labelMachine = new QLabel("Machine", dialog);
+    QLabel *labelStream = new QLabel("Stream", dialog);
+    QLabel *labelPlaceholder = new QLabel(" ", dialog);
+    QLabel *labelTPH = new QLabel("TPH", dialog);
+    QLabel *labelPower = new QLabel("Power", dialog);
+
+    // Add labels to vertical layout
+    headerLayout->addWidget(labelMachine);
+    headerLayout->addWidget(labelStream);
+    headerLayout->addWidget(labelPlaceholder);
+    headerLayout->addWidget(labelTPH);
+    headerLayout->addWidget(labelPower);
+    headerLayout->addStretch(1);
+
+    // Create Table View
     QTableView *tableView = new QTableView(dialog);
 
-    // Create a model for the QTableView
-    QStandardItemModel *model = new QStandardItemModel(0, 5, dialog);
-    model->setHeaderData(0, Qt::Horizontal, "Machine");
-    model->setHeaderData(1, Qt::Horizontal, "Stream");
-    model->setHeaderData(2, Qt::Horizontal, "----");
-    model->setHeaderData(3, Qt::Horizontal, "TPH");
-    model->setHeaderData(4, Qt::Horizontal, "Power");
+    // Horizontal Layout for Table and Header Labels
+    QHBoxLayout *contentLayout = new QHBoxLayout();
+    contentLayout->addLayout(headerLayout);
+    contentLayout->addWidget(tableView);
 
-    // Set the model to the table view
-    tableView->setModel(model);
+    mainLayout->addLayout(contentLayout);
 
-    // Layouts
-    QVBoxLayout *mainLayout = new QVBoxLayout(dialog);
-    QHBoxLayout *mainContentLayout = new QHBoxLayout();
+    // Button Layout
     QHBoxLayout *buttonLayout = new QHBoxLayout();
-
-    // Add widgets to the layouts
-    mainContentLayout->addWidget(tableView);    // Add table view
-
-    // Buttons
     QPushButton *button1 = new QPushButton("Export Results", dialog);
     QPushButton *button2 = new QPushButton("Copy Results to Excel", dialog);
     QPushButton *button3 = new QPushButton("Print", dialog);
@@ -1008,9 +1053,6 @@ void MainWindow::createReportSelectedItems()
     buttonLayout->addStretch(1);
     buttonLayout->addWidget(button5);
 
-    // Assemble the main layout
-    mainLayout->addWidget(headerLabel);
-    mainLayout->addLayout(mainContentLayout);
     mainLayout->addLayout(buttonLayout);
 
     dialog->setLayout(mainLayout);
@@ -1072,5 +1114,185 @@ void MainWindow::createEmissionReportSelectedItems()
 
     dialog->setLayout(mainLayout);
     dialog->exec();
+}
+
+void MainWindow::exportPageToPdf()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save PDF", "", "PDF Files (*.pdf)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPageWithResultToPDF()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save PDF", "", "PDF Files (*.pdf)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPageToEPS()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save EPS", "", "EPS Files (*.eps)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPageWithResultToEPS()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save EPS", "", "EPS Files (*.eps)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPageToJPEG()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save JPEG", "", "JPEG Files (*.jpg *.jpeg)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPageToTIFFColor()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save TIFF (Color)", "", "TIFF Files (*.tiff *.tif)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPageToTIFFBW()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save TIFF (Black & White)", "", "TIFF Files (*.tiff *.tif)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPlantToPdf()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save PDF", "", "PDF Files (*.pdf)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPlantWithResultToPDF()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save PDF", "", "PDF Files (*.pdf)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPlantToEPS()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save EPS", "", "EPS Files (*.eps)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::exportPlantWithResultToEPS()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, "Save EPS", "", "EPS Files (*.eps)");
+    if (!fileName.isEmpty()) {
+    }
+}
+
+void MainWindow::printCurrentContent()
+{
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPrinterName("Printer");
+    printer.setOrientation(QPrinter::Portrait);
+    printer.setPageSize(QPrinter::A4);
+
+    // Create a QPrintDialog to allow the user to select printer settings
+    QPrintDialog printDialog(&printer, this);
+    if (printDialog.exec() == QDialog::Accepted) {
+        // Create a QPainter to print
+        QPainter painter(&printer);
+        graphicsView->render(&painter);
+        painter.end();
+    }
+}
+
+void MainWindow::printAllContent()
+{
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setPrinterName("Printer");
+    printer.setOrientation(QPrinter::Portrait);
+    printer.setPageSize(QPrinter::A4);
+
+    QPrintDialog printDialog(&printer, this);
+    if (printDialog.exec() == QDialog::Accepted) {
+        QPainter painter(&printer);
+
+        //        foreach (CustomGraphicsView *page, graphicsView) {
+        //             page->render(&painter);
+        //         }
+
+        painter.end();
+    }
+
+}
+
+void MainWindow::setUserPreferences()
+{
+    UserPreferences *user = new UserPreferences();
+    user->show();
+}
+
+void MainWindow::on_actionTop_triggered()
+{
+    qDebug()<<"top";
+    QList<QGraphicsItem*> allItems = graphicsView->items();
+    for (QGraphicsItem* item : qAsConst(allItems))
+    {
+        QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(item);
+        if (pixmapItem && pixmapItem->isSelected())
+        {
+            qDebug() << "Found a QGraphicsPixmapItem at position:" << pixmapItem->pos();
+            pixmapItem->setPos(pixmapItem->x(), 0);
+        }
+    }
+}
+
+void MainWindow::on_actionBottom_triggered()
+{
+    qDebug()<<"top";
+    QList<QGraphicsItem*> allItems = graphicsView->items();
+    for (QGraphicsItem* item : allItems)
+    {
+        QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(item);
+        if (pixmapItem && pixmapItem->isSelected())
+        {
+            qDebug() << "Found a QGraphicsPixmapItem at position:" << pixmapItem->pos();
+            pixmapItem->setPos(pixmapItem->x(), graphicsView->height() - pixmapItem->boundingRect().height());
+        }
+    }
+}
+
+void MainWindow::on_actionLeft_triggered()
+{
+    qDebug()<<"top";
+    QList<QGraphicsItem*> allItems = graphicsView->items();
+    for (QGraphicsItem* item : qAsConst(allItems))
+    {
+        QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(item);
+        if (pixmapItem && pixmapItem->isSelected())
+        {
+            qDebug() << "Found a QGraphicsPixmapItem at position:" << pixmapItem->pos();
+             pixmapItem->setPos(0, pixmapItem->y());
+        }
+    }
+}
+
+void MainWindow::on_actionRight_triggered()
+{
+    qDebug()<<"top";
+    QList<QGraphicsItem*> allItems = graphicsView->items();
+    for (QGraphicsItem* item : qAsConst(allItems))
+    {
+        QGraphicsPixmapItem* pixmapItem = dynamic_cast<QGraphicsPixmapItem*>(item);
+        if (pixmapItem && pixmapItem->isSelected())
+        {
+            qDebug() << "Found a QGraphicsPixmapItem at position:" << pixmapItem->pos();
+            pixmapItem->setPos(graphicsView->width() - pixmapItem->boundingRect().width(), pixmapItem->y());
+        }
+    }
 }
 

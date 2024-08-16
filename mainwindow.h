@@ -33,6 +33,7 @@ private slots:
     void updateResult(const QString &result);
     void zoomIn();
     void zoomOut();
+    void zoomToNormal();
     void zoomToFit();
     void addNewPlantTab(int index);
     void addNewPageTab(int index);
@@ -40,6 +41,28 @@ private slots:
     void closePageTab(int index);
     void createReportSelectedItems();
     void createEmissionReportSelectedItems();
+    void exportPageToPdf();
+    void exportPageWithResultToPDF();
+    void exportPageToEPS();
+    void exportPageWithResultToEPS();
+    void exportPageToJPEG();
+    void exportPageToTIFFColor();
+    void exportPageToTIFFBW();
+    void exportPlantToPdf();
+    void exportPlantWithResultToPDF();
+    void exportPlantToEPS();
+    void exportPlantWithResultToEPS();
+    void printCurrentContent();
+    void printAllContent();
+    void setUserPreferences();
+
+    void on_actionTop_triggered();
+
+    void on_actionBottom_triggered();
+
+    void on_actionLeft_triggered();
+
+    void on_actionRight_triggered();
 
 private:
     void SetupUI();

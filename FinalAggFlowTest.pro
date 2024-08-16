@@ -1,4 +1,4 @@
-QT       += core gui xml
+QT       += core gui xml printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,17 +15,23 @@ SOURCES += \
     customgraphicsview.cpp \
     custompixmapitem.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    resizablerectitem.cpp \
+    userpreferences.cpp
+
 HEADERS += \
     addcommand.h \
     arrowlineitem.h \
     customdelegate.h \
     customgraphicsview.h \
     custompixmapitem.h \
-    mainwindow.h
+    mainwindow.h \
+    resizablerectitem.h \
+    userpreferences.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    userpreferences.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
