@@ -14,9 +14,9 @@ SOURCES += \
     customdelegate.cpp \
     customgraphicsview.cpp \
     custompixmapitem.cpp \
+    customshapeitem.cpp \
     main.cpp \
     mainwindow.cpp \
-    resizablerectitem.cpp \
     userpreferences.cpp
 
 HEADERS += \
@@ -25,8 +25,8 @@ HEADERS += \
     customdelegate.h \
     customgraphicsview.h \
     custompixmapitem.h \
+    customshapeitem.h \
     mainwindow.h \
-    resizablerectitem.h \
     userpreferences.h
 
 FORMS += \
