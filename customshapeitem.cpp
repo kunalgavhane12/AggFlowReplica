@@ -98,8 +98,8 @@ void CustomShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 
     if (option->state & QStyle::State_Selected)
     {
-        QPen pen(Qt::blue, 3, Qt::DashLine);
-        painter->setPen(pen);
+//        QPen pen(Qt::blue, 3, Qt::DashLine);
+//        painter->setPen(pen);
         painter->setBrush(Qt::NoBrush);
         painter->drawRect(boundingRect());
         addHandles();

@@ -3,6 +3,7 @@
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QDataStream>
+#include "adjustfeedstream.h"
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
@@ -319,6 +320,8 @@ void CustomGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)
             contextMenu.addAction(acnSetVal);
 
             selectedItem = widget;
+            AdjustFeedStream *feedStream = new AdjustFeedStream();
+            feedStream->show();
         }
     }
     contextMenu.exec(event->globalPos());
