@@ -3,6 +3,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QStyleOptionGraphicsItem>
 #include <QDebug>
+#include <cmath>
 
 CustomShapeItem::CustomShapeItem(ShapeType shapeType, QGraphicsItem *parent)
     : QGraphicsItem(parent), shapeType(shapeType)
@@ -64,17 +65,20 @@ void CustomShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     switch (shapeType)
     {
     case ConvLine:
+        painter->drawLine(shapeLine.p1(), shapeLine.p2());
         painter->setBrush(Qt::white);
         painter->drawEllipse(shapeLine.p1(), 5, 5);
         painter->setBrush(Qt::green);
         painter->drawEllipse(shapeLine.p2(), 5, 5);
-        painter->drawLine(shapeLine.p1(), shapeLine.p2());
         break;
     case ConvReverseLine:
+        painter->drawLine(shapeLine.p1(), shapeLine.p2());
         painter->setBrush(Qt::yellow);
         painter->drawEllipse(shapeLine.p1(), 5, 5);
         painter->setBrush(Qt::green);
         painter->drawEllipse(shapeLine.p2(), 5, 5);
+        break;
+    case Line:
         painter->drawLine(shapeLine.p1(), shapeLine.p2());
         break;
     case Rectangle:
@@ -83,24 +87,32 @@ void CustomShapeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
     case Ellipse:
         painter->drawEllipse(shapeRect);
         break;
-    case Line:
-        painter->drawLine(shapeLine.p1(), shapeLine.p2());
-        break;
-    case PolygonLine:
-        //correct this
-        painter->drawLine(shapeLine.p1(), shapeLine.p2());
-        break;
     case Arrow:
-        //        add  arrow at end
+    {
+        QLineF line(shapeLine);
+        painter->drawLine(line);
+
+        double angle = std::atan2(-line.dy(), line.dx());
+
+        QPointF arrowP1 = line.p2() - QPointF(sin(angle + M_PI / 3) * 10, cos(angle + M_PI / 3) * 10);
+        QPointF arrowP2 = line.p2() - QPointF(sin(angle + M_PI - M_PI / 3) * 10, cos(angle + M_PI - M_PI / 3) * 10);
+
+        QPolygonF arrowHead;
+        arrowHead << line.p2() << arrowP1 << arrowP2;
+
+        painter->setBrush(Qt::black);
+        painter->drawPolygon(arrowHead);
+        break;
+    }
+    case PolygonLine:
         painter->drawLine(shapeLine.p1(), shapeLine.p2());
         break;
     }
 
     if (option->state & QStyle::State_Selected)
     {
-//        QPen pen(Qt::blue, 3, Qt::DashLine);
-//        painter->setPen(pen);
         painter->setBrush(Qt::NoBrush);
+        painter->setPen(QPen(Qt::blue, 2, Qt::DashLine));
         painter->drawRect(boundingRect());
         addHandles();
     }

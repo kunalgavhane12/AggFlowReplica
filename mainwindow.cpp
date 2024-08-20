@@ -826,11 +826,9 @@ void MainWindow::onTransportEquipment(const QModelIndex &index)
     switch (index.row())
     {
     case 0:
-        qDebug() << "coveyor in flow";
         graphicsView->setShapeType(CustomShapeItem::ConvLine);
         break;
     case 1:
-        qDebug() << "reversible conveyor in flow";
         graphicsView->setShapeType(CustomShapeItem::ConvReverseLine);
         break;
     default:

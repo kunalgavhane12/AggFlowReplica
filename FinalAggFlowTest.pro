@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     addcommand.cpp \
+    adjustfeeder.cpp \
     adjustfeedstream.cpp \
     arrowlineitem.cpp \
     customdelegate.cpp \
@@ -22,6 +23,7 @@ SOURCES += \
 
 HEADERS += \
     addcommand.h \
+    adjustfeeder.h \
     adjustfeedstream.h \
     arrowlineitem.h \
     customdelegate.h \
@@ -32,6 +34,7 @@ HEADERS += \
     userpreferences.h
 
 FORMS += \
+    adjustfeeder.ui \
     adjustfeedstream.ui \
     mainwindow.ui \
     userpreferences.ui

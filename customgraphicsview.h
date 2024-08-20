@@ -38,6 +38,7 @@ public:
     void handleProxyWidgetInteraction(const QPointF &scenePos, QGraphicsProxyWidget *proxyWidget);
     void handleEllipseInteraction(const QPointF &scenePos, QGraphicsEllipseItem *ellipseItem);
     void handleItemInteraction(const QPointF &scenePos, QGraphicsItem *item);
+
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;

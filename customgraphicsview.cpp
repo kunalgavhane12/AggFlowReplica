@@ -131,22 +131,22 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
         switch (shapeType)
         {
         case CustomShapeItem::ConvLine:
-             currentItem1->setShapeLine(QLineF(origin, currentPos));
+            currentItem1->setShapeLine(QLineF(origin, currentPos));
             break;
         case CustomShapeItem::ConvReverseLine:
-             currentItem1->setShapeLine(QLineF(origin, currentPos));
+            currentItem1->setShapeLine(QLineF(origin, currentPos));
             break;
         case CustomShapeItem::Rectangle:
-             currentItem1->setShapeRect(QRectF(origin, currentPos));
+            currentItem1->setShapeRect(QRectF(origin, currentPos));
             break;
         case CustomShapeItem::Ellipse:
             currentItem1->setShapeRect(QRectF(origin, currentPos));
             break;
         case CustomShapeItem::Line:
-             currentItem1->setShapeLine(QLineF(origin, currentPos));
+            currentItem1->setShapeLine(QLineF(origin, currentPos));
             break;
         case CustomShapeItem::PolygonLine:
-             currentItem1->setShapeLine(QLineF(origin, currentPos));
+            currentItem1->setShapeLine(QLineF(origin, currentPos));
             break;
         case CustomShapeItem::Arrow:
             currentItem1->setShapeLine(QLineF(origin, currentPos));
@@ -318,10 +318,10 @@ void CustomGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)
         if(widget)
         {
             contextMenu.addAction(acnSetVal);
-
             selectedItem = widget;
-            AdjustFeedStream *feedStream = new AdjustFeedStream();
-            feedStream->show();
+
+            //            AdjustFeedStream *feedStream = new AdjustFeedStream();
+            //            feedStream->show();
         }
     }
     contextMenu.exec(event->globalPos());
@@ -435,6 +435,9 @@ void CustomGraphicsView::onSetValue()
     CustomPixmapItem* item = dynamic_cast<CustomPixmapItem *>(selectedItem);
     if(item)
     {
+        //print item name
+        AdjustFeedStream *feedStream = new AdjustFeedStream();
+        feedStream->show();
         double value = QInputDialog::getDouble(this, "Enter Value:", "Operation:", 0, 0, 1000, 2, nullptr);
         item->SetText(QString::number(value));
     }
