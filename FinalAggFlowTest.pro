@@ -13,12 +13,14 @@ SOURCES += \
     adjustfeeder.cpp \
     adjustfeedstream.cpp \
     arrowlineitem.cpp \
+    conveyorcalculation.cpp \
     customdelegate.cpp \
     customgraphicsview.cpp \
     custompixmapitem.cpp \
     customshapeitem.cpp \
     main.cpp \
     mainwindow.cpp \
+    resizehandle.cpp \
     userpreferences.cpp
 
 HEADERS += \
@@ -26,16 +28,19 @@ HEADERS += \
     adjustfeeder.h \
     adjustfeedstream.h \
     arrowlineitem.h \
+    conveyorcalculation.h \
     customdelegate.h \
     customgraphicsview.h \
     custompixmapitem.h \
     customshapeitem.h \
     mainwindow.h \
+    resizehandle.h \
     userpreferences.h
 
 FORMS += \
     adjustfeeder.ui \
     adjustfeedstream.ui \
+    conveyorcalculation.ui \
     mainwindow.ui \
     userpreferences.ui
 
