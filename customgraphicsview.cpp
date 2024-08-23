@@ -4,24 +4,31 @@
 #include <QMimeData>
 #include <QDataStream>
 #include "adjustfeedstream.h"
+#include "ui_adjustfeedstream.h"
+#include "adjustfeeder.h"
+#include "conveyorcalculation.h"
+#include "resizehandle.h"
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
     , scene(new QGraphicsScene(this))
     , currentLine(nullptr)
     , UndoStack(new QUndoStack(this))
+    , drawing(false)
+    , selection(false)
 {
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
-    setDragMode(QGraphicsView::ScrollHandDrag);
-    setFixedSizeAndScene(QSize(600, 500));
+    setDragMode(QGraphicsView::RubberBandDrag);
+    setFixedSizeAndScene(QSize(800, 600));
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     //    scene->setSceneRect(0, 0,600,400);
     setMouseTracking(true);
 
     acnDel = new QAction(tr("Delete line"), this);
+    acnDel->setShortcuts(QKeySequence::Delete);
     acnSetVal = new QAction(tr("Set value"), this);
 
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
@@ -63,7 +70,6 @@ void CustomGraphicsView::dropEvent(QDropEvent *event)
         CustomPixmapItem* item = new CustomPixmapItem(pixmap, itemName);
         item->setPos(mapToScene(event->pos()));
         scene->addItem(item);
-        qDebug() << "IN Custom graphic Name: " <<itemName;
         connect(item, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
 
         EmitDebugData(event->pos());
@@ -83,38 +89,46 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
         handleEllipseInteraction(scenePos, dynamic_cast<QGraphicsEllipseItem *>(item));
     }
 
-    if (drawing && event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton)
     {
-        origin = scenePos;
-        currentItem1 = new CustomShapeItem(shapeType);
-        currentItem1->setFlag(QGraphicsItem::ItemIsMovable, false);
-        switch (shapeType)
-        {
-        case CustomShapeItem::ConvLine:
-            currentItem1->setShapeLine(QLineF(origin, origin));
-            break;
-        case CustomShapeItem::ConvReverseLine:
-            currentItem1->setShapeLine(QLineF(origin, origin));
-            break;
-        case CustomShapeItem::Rectangle:
-            currentItem1->setShapeRect(QRectF(origin, QSizeF(50, 50)));
-            break;
-        case CustomShapeItem::Ellipse:
-            currentItem1->setShapeRect(QRectF(origin, QSizeF(50, 50)));
-            break;
-        case CustomShapeItem::Line:
-            currentItem1->setShapeLine(QLineF(origin, origin));
-            break;
-        case CustomShapeItem::Arrow:
-            currentItem1->setShapeLine(QLineF(origin, origin));
-            break;
-        case CustomShapeItem::PolygonLine:
-            currentItem1->setShapeLine(QLineF(origin, origin));
-            break;
-        }
-        scene->addItem(currentItem1);
-    }
+        if(!handles.isEmpty())
+            removeHandles();
 
+        if (drawing)
+        {
+            origin = scenePos;
+            currentItem1 = new CustomShapeItem(shapeType);
+            currentItem1->setFlag(QGraphicsItem::ItemIsMovable, false);
+            switch (shapeType)
+            {
+            case CustomShapeItem::ConvLine:
+            case CustomShapeItem::ConvReverseLine:
+            case CustomShapeItem::Line:
+            case CustomShapeItem::Arrow:
+            case CustomShapeItem::PolygonLine:
+                currentItem1->setShapeLine(QLineF(origin, origin));
+                break;
+            case CustomShapeItem::Rectangle:
+            case CustomShapeItem::Ellipse:
+                currentItem1->setShapeRect(QRectF(origin, QSizeF(50, 50)));
+                break;
+            }
+            scene->addItem(currentItem1);
+        }
+        else if (selection && item)
+        {
+            qDebug() << "In selection";
+            resizing = true;
+
+            currentItem1 = dynamic_cast<CustomShapeItem*>(item);
+            if (currentItem1)
+            {
+                currentItem1->setFlag(QGraphicsItem::ItemIsMovable, true);
+                resizableShapeItem = currentItem1;
+                addBlueHandles(resizableShapeItem);
+            }
+        }
+    }
     QGraphicsView::mousePressEvent(event);
 }
 
@@ -127,36 +141,68 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
         QLineF newLine(lineStartPoint, endPoint);
         currentLine->setLine(newLine);
     }
+
     if (drawing && currentItem1)
     {
         QPointF currentPos = mapToScene(event->pos());
         switch (shapeType)
         {
         case CustomShapeItem::ConvLine:
-            currentItem1->setShapeLine(QLineF(origin, currentPos));
-            break;
         case CustomShapeItem::ConvReverseLine:
-            currentItem1->setShapeLine(QLineF(origin, currentPos));
-            break;
-        case CustomShapeItem::Rectangle:
-            currentItem1->setShapeRect(QRectF(origin, currentPos));
-            break;
-        case CustomShapeItem::Ellipse:
-            currentItem1->setShapeRect(QRectF(origin, currentPos));
-            break;
         case CustomShapeItem::Line:
-            currentItem1->setShapeLine(QLineF(origin, currentPos));
-            break;
+        case CustomShapeItem::Arrow:
         case CustomShapeItem::PolygonLine:
             currentItem1->setShapeLine(QLineF(origin, currentPos));
             break;
-        case CustomShapeItem::Arrow:
-            currentItem1->setShapeLine(QLineF(origin, currentPos));
+        case CustomShapeItem::Rectangle:
+        case CustomShapeItem::Ellipse:
+            currentItem1->setShapeRect(QRectF(origin, currentPos));
             break;
         }
         scene->update();
     }
-    update();
+    else if (selection && resizing && !handles.isEmpty())
+    {
+        drawing = true;
+        currentItem1->setFlag(QGraphicsItem::ItemIsMovable, false);
+        QGraphicsEllipseItem* activeHandle = nullptr;
+        for (auto handleItem : handles)
+        {
+            if (handleItem->contains(mapFromScene(endPoint)))
+            {
+                activeHandle = handleItem;
+                break;
+            }
+        }
+
+        if (activeHandle)
+        {
+            QRectF originalRect = resizableShapeItem->boundingRect();
+            QRectF newRect = originalRect;
+
+            if (activeHandle == handles[0]) // Top-left
+            {
+                newRect.setTopLeft(endPoint);
+            }
+            else if (activeHandle == handles[1]) // Top-right
+            {
+                newRect.setTopRight(endPoint);
+            }
+            else if (activeHandle == handles[2]) // Bottom-left
+            {
+                newRect.setBottomLeft(endPoint);
+            }
+            else if (activeHandle == handles[3]) // Bottom-right
+            {
+                newRect.setBottomRight(endPoint);
+            }
+
+            resizableShapeItem->setShapeRect(newRect);
+            updateBlueHandles(resizableShapeItem);
+            scene->update();
+        }
+    }
+
     QGraphicsView::mouseMoveEvent(event);
 }
 
@@ -194,9 +240,27 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
         }
         currentLine = nullptr;
     }
-    else if (drawing && event->button() == Qt::LeftButton) {
+
+    if (drawing && event->button() == Qt::LeftButton)
+    {
         drawing = false;
+        selection = true;
+        resizing = false;
+        if (currentItem1)
+        {
+            currentItem1->setFlag(QGraphicsItem::ItemIsMovable, true);
+            currentItem1 = nullptr;
+        }
+    }
+    else if (resizing && event->button() == Qt::LeftButton)
+    {
+        resizing = false;
+        qDebug() << "Resizing completed";
+        removeHandles();
+        addBlueHandles(resizableShapeItem);
+        resizableShapeItem->setFlag(QGraphicsItem::ItemIsMovable, true);
         currentItem1->setFlag(QGraphicsItem::ItemIsMovable, true);
+        resizableShapeItem = nullptr;
         currentItem1 = nullptr;
     }
     else
@@ -216,6 +280,7 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     QGraphicsView::mouseReleaseEvent(event);
 }
+
 
 void CustomGraphicsView::setShapeType(CustomShapeItem::ShapeType shape)
 {
@@ -321,9 +386,6 @@ void CustomGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)
         {
             contextMenu.addAction(acnSetVal);
             selectedItem = widget;
-
-            //            AdjustFeedStream *feedStream = new AdjustFeedStream();
-            //            feedStream->show();
         }
     }
     contextMenu.exec(event->globalPos());
@@ -437,12 +499,32 @@ void CustomGraphicsView::onSetValue()
     CustomPixmapItem* item = dynamic_cast<CustomPixmapItem *>(selectedItem);
     if(item)
     {
-        //print item name
-        qDebug() << "Double Clicked Item Name"<<item->GetItemName();
-        AdjustFeedStream *feedStream = new AdjustFeedStream();
-        feedStream->show();
-        double value = QInputDialog::getDouble(this, "Enter Value:", "Operation:", 0, 0, 1000, 2, nullptr);
-        item->SetText(QString::number(value));
+        if("start_points_loader" == item->GetItemName())
+        {
+            AdjustFeedStream *feedStream = new AdjustFeedStream();
+            feedStream->show();
+        }
+        else if ("start_points_start_sugar_pile" == item->GetItemName())
+        {
+            AdjustFeedStream *feedStream = new AdjustFeedStream();
+            feedStream->setWindowTitle("Adjust Feed Stream For Multiple Outputs");
+            feedStream->on_clear();
+            feedStream->show();
+        }
+        else if("apron_feeder" == item->GetItemName())
+        {
+            AdjustFeeder *feeder = new AdjustFeeder();
+            feeder->setWindowTitle(item->GetItemName());
+            feeder->show();
+        }
+        else if("place_a_conveyor_in_the_flow" == item->GetItemName())
+        {
+            ConveyorCalculation *conveyor = new ConveyorCalculation();
+            //           conveyor->setWindowTitle(item->GetItemName());
+            conveyor->show();
+        }
+        //        double value = QInputDialog::getDouble(this, "Enter Value:", "Operation:", 0, 0, 1000, 2, nullptr);
+        //        item->SetText(QString::number(value));
     }
 }
 

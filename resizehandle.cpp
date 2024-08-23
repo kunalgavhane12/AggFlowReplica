@@ -30,12 +30,12 @@ void ResizeHandle::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         if (auto rectItem = dynamic_cast<QGraphicsRectItem*>(m_resizeItem))
         {
             QRectF newRect(rectItem->rect().topLeft(), newPos);
-            rectItem->setRect(newRect.normalized());
+            rectItem->setRect(newRect);
         }
         else if (auto ellipseItem = dynamic_cast<QGraphicsEllipseItem*>(m_resizeItem))
         {
             QRectF newRect(ellipseItem->rect().topLeft(), newPos);
-            ellipseItem->setRect(newRect.normalized());
+            ellipseItem->setRect(newRect);
         }
         else if (auto lineItem = dynamic_cast<QGraphicsLineItem*>(m_resizeItem))
         {

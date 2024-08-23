@@ -12,6 +12,7 @@ SOURCES += \
     addcommand.cpp \
     adjustfeeder.cpp \
     adjustfeedstream.cpp \
+    adjustpassthroughsurgebin.cpp \
     arrowlineitem.cpp \
     conveyorcalculation.cpp \
     customdelegate.cpp \
@@ -20,13 +21,14 @@ SOURCES += \
     customshapeitem.cpp \
     main.cpp \
     mainwindow.cpp \
-    resizehandle.cpp \
+#    resizehandle.cpp \
     userpreferences.cpp
 
 HEADERS += \
     addcommand.h \
     adjustfeeder.h \
     adjustfeedstream.h \
+    adjustpassthroughsurgebin.h \
     arrowlineitem.h \
     conveyorcalculation.h \
     customdelegate.h \
@@ -34,12 +36,14 @@ HEADERS += \
     custompixmapitem.h \
     customshapeitem.h \
     mainwindow.h \
-    resizehandle.h \
+#    resizehandle.h \
     userpreferences.h
 
 FORMS += \
     adjustfeeder.ui \
     adjustfeedstream.ui \
+    adjustfeedstreamMultiple.ui \
+    adjustpassthroughsurgebin.ui \
     conveyorcalculation.ui \
     mainwindow.ui \
     userpreferences.ui

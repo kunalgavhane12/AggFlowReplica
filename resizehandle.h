@@ -17,7 +17,6 @@ protected:
 private:
     QGraphicsItem *m_resizeItem = nullptr;
     bool m_isResizingStart;
-    QPointF m_resizeCorner;
 };
 
 #endif // RESIZEHANDLE_H
