@@ -15,13 +15,17 @@ SOURCES += \
     adjustpassthroughsurgebin.cpp \
     arrowlineitem.cpp \
     conveyorcalculation.cpp \
+    crushingequipment.cpp \
     customdelegate.cpp \
     customgraphicsview.cpp \
     custompixmapitem.cpp \
     customshapeitem.cpp \
     main.cpp \
     mainwindow.cpp \
-#    resizehandle.cpp \
+    measurementequipment.cpp \
+    powersourcesandauxiliaryequipment.cpp \
+    resizehandle.cpp \
+    splitter.cpp \
     userpreferences.cpp
 
 HEADERS += \
@@ -31,12 +35,16 @@ HEADERS += \
     adjustpassthroughsurgebin.h \
     arrowlineitem.h \
     conveyorcalculation.h \
+    crushingequipment.h \
     customdelegate.h \
     customgraphicsview.h \
     custompixmapitem.h \
     customshapeitem.h \
     mainwindow.h \
-#    resizehandle.h \
+    measurementequipment.h \
+    powersourcesandauxiliaryequipment.h \
+    resizehandle.h \
+    splitter.h \
     userpreferences.h
 
 FORMS += \
@@ -45,7 +53,11 @@ FORMS += \
     adjustfeedstreamMultiple.ui \
     adjustpassthroughsurgebin.ui \
     conveyorcalculation.ui \
+    crushingequipment.ui \
     mainwindow.ui \
+    measurementequipment.ui \
+    powersourcesandauxiliaryequipment.ui \
+    splitter.ui \
     userpreferences.ui
 
 # Default rules for deployment.

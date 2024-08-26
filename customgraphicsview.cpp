@@ -8,6 +8,11 @@
 #include "adjustfeeder.h"
 #include "conveyorcalculation.h"
 #include "resizehandle.h"
+#include "splitter.h"
+#include "crushingequipment.h"
+#include "adjustpassthroughsurgebin.h"
+#include "powersourcesandauxiliaryequipment.h"
+#include "measurementequipment.h"
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
@@ -79,6 +84,110 @@ void CustomGraphicsView::dropEvent(QDropEvent *event)
     }
 }
 
+
+//void CustomGraphicsView::mousePressEvent(QMouseEvent *event) {
+
+//    startPoint = mapToScene(event->pos());
+
+//    if(drawing){
+//        switch (shapeType) {
+//        case CustomShapeItem::Rectangle:
+//            rectItem = new QGraphicsRectItem();
+//            rectItem->setPen(QPen(Qt::black));
+//            scene->addItem(rectItem);
+//            break;
+//        case CustomShapeItem::Ellipse:
+//            ellipseItem = new QGraphicsEllipseItem();
+//            ellipseItem->setPen(QPen(Qt::black));
+//            scene->addItem(ellipseItem);
+//            break;
+//        case CustomShapeItem::Line:
+//            lineItem = new QGraphicsLineItem();
+//            lineItem->setPen(QPen(Qt::red, 2));
+//            scene->addItem(lineItem);
+//            break;
+
+//        default:
+//            break;
+//        }
+//    }
+//}
+
+//void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event) {
+
+//    QPointF endPoint = mapToScene(event->pos());
+//    if(drawing)
+//    {
+//        if (rectItem)
+//        {
+//            QRectF rect(startPoint, endPoint);
+//            rectItem->setRect(rect.normalized());
+//        }
+//        else if (ellipseItem)
+//        {
+//            QRectF rect(startPoint, endPoint);
+//            ellipseItem->setRect(rect.normalized());
+//        }
+//        else if (lineItem)
+//        {
+//            QLineF line(startPoint, endPoint);
+//            lineItem->setLine(line);
+//        }
+//    }
+//}
+
+//void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event) {
+
+//    if(drawing)
+//    {
+//        selection = true;
+//    }
+//    QPointF scenePos = mapToScene(event->pos());
+//    QGraphicsItem *item = scene->itemAt(scenePos, QTransform());
+
+//    if(selection){
+//    // Clear previous handles
+//    for (auto handle : handles) {
+//        scene->removeItem(handle);
+//        //            delete handle;
+//    }
+//    handles.clear();
+
+//    if (item) {
+//        // Get the bounding rect in the item's coordinate system
+//        QRectF boundingRect = item->boundingRect();
+//        // Map the bounding rect corners to scene coordinates
+//        QPointF topLeft = item->mapToScene(boundingRect.topLeft());
+//        QPointF bottomRight = item->mapToScene(boundingRect.bottomRight());
+
+//        // Add resize handles at each corner
+//        for (const auto &corner : {topLeft, QPointF(topLeft.x(), bottomRight.y()), QPointF(bottomRight.x(), topLeft.y()), bottomRight}) {
+//            ResizeHandle *handle = new ResizeHandle();
+//            handle->setResizeItem(item);
+//            handle->setPos(item->mapFromScene(corner));  // Set the handle position relative to the item's coordinate system
+//            scene->addItem(handle);
+//            handles.append(handle);
+//        }
+//    }
+
+//    // Handle other modes
+//    if (rectItem) {
+//        rectItem->setFlag(QGraphicsItem::ItemIsMovable);
+//        rectItem = nullptr;
+//    }  else if (ellipseItem) {
+//        ellipseItem->setFlag(QGraphicsItem::ItemIsMovable);
+//        ellipseItem = nullptr;
+//    }  else if (lineItem) {
+//        lineItem->setFlag(QGraphicsItem::ItemIsMovable);
+//        lineItem = nullptr;
+//    }
+
+//    QGraphicsView::mouseReleaseEvent(event);
+//    return;
+//    }
+
+//}
+
 void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
 {
     QPointF scenePos = mapToScene(event->pos());
@@ -91,14 +200,12 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
 
     if (event->button() == Qt::LeftButton)
     {
-        if(!handles.isEmpty())
-            removeHandles();
 
         if (drawing)
         {
             origin = scenePos;
-            currentItem1 = new CustomShapeItem(shapeType);
-            currentItem1->setFlag(QGraphicsItem::ItemIsMovable, false);
+            drawItem = new CustomShapeItem(shapeType);
+            drawItem->setFlag(QGraphicsItem::ItemIsMovable, false);
             switch (shapeType)
             {
             case CustomShapeItem::ConvLine:
@@ -106,26 +213,25 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
             case CustomShapeItem::Line:
             case CustomShapeItem::Arrow:
             case CustomShapeItem::PolygonLine:
-                currentItem1->setShapeLine(QLineF(origin, origin));
+                drawItem->setShapeLine(QLineF(origin, origin));
                 break;
             case CustomShapeItem::Rectangle:
             case CustomShapeItem::Ellipse:
-                currentItem1->setShapeRect(QRectF(origin, QSizeF(50, 50)));
+                drawItem->setShapeRect(QRectF(origin, QSizeF(50, 50)));
                 break;
             }
-            scene->addItem(currentItem1);
+            scene->addItem(drawItem);
         }
         else if (selection && item)
         {
             qDebug() << "In selection";
             resizing = true;
 
-            currentItem1 = dynamic_cast<CustomShapeItem*>(item);
-            if (currentItem1)
+            drawItem = dynamic_cast<CustomShapeItem*>(item);
+            if (drawItem)
             {
-                currentItem1->setFlag(QGraphicsItem::ItemIsMovable, true);
-                resizableShapeItem = currentItem1;
-                addBlueHandles(resizableShapeItem);
+                drawItem->setFlag(QGraphicsItem::ItemIsMovable, true);
+                resizableShapeItem = drawItem;
             }
         }
     }
@@ -142,7 +248,7 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
         currentLine->setLine(newLine);
     }
 
-    if (drawing && currentItem1)
+    if (drawing && drawItem)
     {
         QPointF currentPos = mapToScene(event->pos());
         switch (shapeType)
@@ -152,11 +258,11 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
         case CustomShapeItem::Line:
         case CustomShapeItem::Arrow:
         case CustomShapeItem::PolygonLine:
-            currentItem1->setShapeLine(QLineF(origin, currentPos));
+            drawItem->setShapeLine(QLineF(origin, currentPos));
             break;
         case CustomShapeItem::Rectangle:
         case CustomShapeItem::Ellipse:
-            currentItem1->setShapeRect(QRectF(origin, currentPos));
+            drawItem->setShapeRect(QRectF(origin, currentPos));
             break;
         }
         scene->update();
@@ -164,7 +270,7 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
     else if (selection && resizing && !handles.isEmpty())
     {
         drawing = true;
-        currentItem1->setFlag(QGraphicsItem::ItemIsMovable, false);
+        drawItem->setFlag(QGraphicsItem::ItemIsMovable, false);
         QGraphicsEllipseItem* activeHandle = nullptr;
         for (auto handleItem : handles)
         {
@@ -198,7 +304,6 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
             }
 
             resizableShapeItem->setShapeRect(newRect);
-            updateBlueHandles(resizableShapeItem);
             scene->update();
         }
     }
@@ -246,22 +351,19 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
         drawing = false;
         selection = true;
         resizing = false;
-        if (currentItem1)
+        if (drawItem)
         {
-            currentItem1->setFlag(QGraphicsItem::ItemIsMovable, true);
-            currentItem1 = nullptr;
+            drawItem->setFlag(QGraphicsItem::ItemIsMovable, true);
+            drawItem = nullptr;
         }
     }
     else if (resizing && event->button() == Qt::LeftButton)
     {
         resizing = false;
-        qDebug() << "Resizing completed";
-        removeHandles();
-        addBlueHandles(resizableShapeItem);
         resizableShapeItem->setFlag(QGraphicsItem::ItemIsMovable, true);
-        currentItem1->setFlag(QGraphicsItem::ItemIsMovable, true);
+        drawItem->setFlag(QGraphicsItem::ItemIsMovable, true);
         resizableShapeItem = nullptr;
-        currentItem1 = nullptr;
+        drawItem = nullptr;
     }
     else
     {
@@ -280,7 +382,6 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     QGraphicsView::mouseReleaseEvent(event);
 }
-
 
 void CustomGraphicsView::setShapeType(CustomShapeItem::ShapeType shape)
 {
@@ -496,10 +597,55 @@ void CustomGraphicsView::onActionDelete()
 
 void CustomGraphicsView::onSetValue()
 {
+    QStringList startPointsList {"start_points_loader", "start_points_dump_truck", "start_points_excavator",
+                                 "start_points_bull_dozer", "start_points_dredge", "start_points_generic_material_source"
+                                 /*,"start_points_start_sugar_pile"*/};
+
+    QStringList inLineEquipmentList {"apron_feeder", "feeder", "belt_feeder", "suger_bin", "pan_feeder",
+                                     "suger_bin_with_feeder", "dust_collector"};
+    QStringList transportList {"place_a_conveyor_in_the_flow", "place_a_reversible_conveyor_in_the_flow",
+                               "place_a_haul_truck_in_the_flow", "place_a_front_end_loader_in_the_flow",
+                               "place_a_front_end_loader_in_the_flow","place_a_surge_bin_in_the_flow",
+                               "bucket_elevator", "screw_conveyor" };
+
+    QStringList splitterList {"place_a_splitter_in_the_flow", "place_a_three_way_splitter_in_the_flow",
+                              "place_a_flop_gate_in_the_flow","place_an_overflow_box_in_the_flow",
+                              "place_a_finger_gate_in_the_flow"};
+    QStringList crushingList {"place_a_jaw_crusher_in_the_flow", "place_a_cone_crusher_in_the_flow",
+                              "place_an_hsi_crusher_in_the_flow","place_a_vsi_crusher_in_the_flow",
+                              "place_a_roll_crusher_in_the_flow", "place_a_mill_crusher_in_the_flow" };
+
+    QStringList screeningList {"grizzly_feeder_vibrating_scalper", "1deck", "2deck", "3deck","4deck","5deck",
+                               "place_a_custom_screen_in_the_flow_trommel_or_banana",
+                               "place_a_custom_multi_screen_or_split_deck_screen_in_the_flow","air_seperator" };
+
+    QStringList mobileList {"place_a_mobile_jaw_on_the_worksheet", "place_a_mobile_cone_on_the_worksheet",
+                            "place_a_mobile_hsi_on_the_worksheet","place_a_mobile_vsi_on_the_worksheet",
+                            "place_a_mobile_screen_on_the_worksheet", "place_a_mobile_wash_unit_on_the_worksheet",
+                            "place_a_mobile_conveyor_on_the_worksheet"};
+
+    QStringList washList {"scrubbing_and_attrition_equipment", "classification_equipment",
+                          "sand_washing_dewatering","place_an_overflow_box_in_the_flow","mixing_box",
+                          "place_a_slurry_box_in_the_flow", "slurry_pump", "slurry_valve",
+                          "water_treatment_or_recycling_recover_water" };
+
+    QStringList inventoryList {"inventory_suger_pile_with_feeders", "inventory_suger_bin_with_feeders"};
+
+    QStringList endProductList {"end_point_product_pile", "end_point_haul_truck",
+                                "end_point_haul_railway_transport","end_point_haul_water_transport"};
+
+    QStringList cleanWaterList {"clean_water_source", "clean_Watersource", "water_pump","water_splitter",
+                                "waterSplitter", "water_tank", "water_valve", "water_spray_nozzles" };
+
+    QStringList measurementList {"sample_bucket" };
+
+    QStringList powerSourceList {"external_power_source", "internal_power_source", "fuel_tank","personnel"};
+
     CustomPixmapItem* item = dynamic_cast<CustomPixmapItem *>(selectedItem);
+
     if(item)
     {
-        if("start_points_loader" == item->GetItemName())
+        if (startPointsList.contains(item->GetItemName()))
         {
             AdjustFeedStream *feedStream = new AdjustFeedStream();
             feedStream->show();
@@ -511,17 +657,73 @@ void CustomGraphicsView::onSetValue()
             feedStream->on_clear();
             feedStream->show();
         }
-        else if("apron_feeder" == item->GetItemName())
+        else if (inLineEquipmentList.contains(item->GetItemName()))
         {
             AdjustFeeder *feeder = new AdjustFeeder();
             feeder->setWindowTitle(item->GetItemName());
             feeder->show();
         }
-        else if("place_a_conveyor_in_the_flow" == item->GetItemName())
+        else if(transportList.contains(item->GetItemName()))
         {
             ConveyorCalculation *conveyor = new ConveyorCalculation();
-            //           conveyor->setWindowTitle(item->GetItemName());
             conveyor->show();
+        }
+        else if(splitterList.contains(item->GetItemName()))
+        {
+            Splitter *splitter = new Splitter();
+            //           splitter->setWindowTitle(item->GetItemName());
+            splitter->show();
+        }
+        else if(crushingList.contains(item->GetItemName()))
+        {
+            //            CrushingEquipment *crushing = new CrushingEquipment();
+            //                crushing->show();
+        }
+        else if(screeningList.contains(item->GetItemName()))
+        {
+            CrushingEquipment *crushing = new CrushingEquipment();
+            //           crushing->setWindowTitle(item->GetItemName());
+            crushing->show();
+        }
+        else if(mobileList.contains(item->GetItemName()))
+        {
+            CrushingEquipment *crushing = new CrushingEquipment();
+            //           crushing->setWindowTitle(item->GetItemName());
+            crushing->show();
+        }
+        else if(washList.contains(item->GetItemName()))
+        {
+            CrushingEquipment *crushing = new CrushingEquipment();
+            //           crushing->setWindowTitle(item->GetItemName());
+            crushing->show();
+        }
+        else if(inventoryList.contains(item->GetItemName()))
+        {
+            AdjustPassThroughSurgeBin *surgeBin = new AdjustPassThroughSurgeBin();
+            surgeBin->show();
+        }
+        else if(endProductList.contains(item->GetItemName()))
+        {
+            CrushingEquipment *crushing = new CrushingEquipment();
+            //           crushing->setWindowTitle(item->GetItemName());
+            crushing->show();
+        }
+        else if(cleanWaterList.contains(item->GetItemName()))
+        {
+            CrushingEquipment *crushing = new CrushingEquipment();
+            //           crushing->setWindowTitle(item->GetItemName());
+            crushing->show();
+        }
+        else if(measurementList.contains(item->GetItemName()))
+        {
+            MeasurementEquipment *measurement = new MeasurementEquipment();
+            measurement->show();
+        }
+        else if(powerSourceList.contains(item->GetItemName()))
+        {
+            PowerSourcesandAuxiliaryEquipment *powerSource = new PowerSourcesandAuxiliaryEquipment();
+            powerSource->setWindowTitle(item->GetItemName());
+            powerSource->show();
         }
         //        double value = QInputDialog::getDouble(this, "Enter Value:", "Operation:", 0, 0, 1000, 2, nullptr);
         //        item->SetText(QString::number(value));

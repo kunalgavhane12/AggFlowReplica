@@ -1,9 +1,12 @@
 #include "resizehandle.h"
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsScene>
+#include <QGraphicsEllipseItem>
+#include <QGraphicsRectItem>
+#include <QGraphicsLineItem>
 
 ResizeHandle::ResizeHandle(QGraphicsItem *parent)
-    : QGraphicsEllipseItem(parent), m_resizeItem(nullptr)
+    : QGraphicsEllipseItem(parent), m_resizeItem(nullptr), isResizingStart(true)
 {
     setRect(-5, -5, 10, 10);
     setBrush(QBrush(Qt::red));
@@ -21,11 +24,16 @@ QGraphicsItem* ResizeHandle::resizeItem() const
     return m_resizeItem;
 }
 
+void ResizeHandle::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+     QGraphicsEllipseItem::mousePressEvent(event);
+}
+
 void ResizeHandle::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (m_resizeItem)
     {
-        QPointF newPos = mapToParent(event->pos());
+        QPointF newPos = mapToScene(event->pos());
 
         if (auto rectItem = dynamic_cast<QGraphicsRectItem*>(m_resizeItem))
         {
@@ -39,23 +47,23 @@ void ResizeHandle::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         }
         else if (auto lineItem = dynamic_cast<QGraphicsLineItem*>(m_resizeItem))
         {
-            QPointF handlePos = mapToParent(event->pos());
+            QPointF handlePos = mapToScene(event->pos());
             if (QLineF(handlePos, lineItem->line().p1()).length() < QLineF(handlePos, lineItem->line().p2()).length())
             {
-                m_isResizingStart = true;
+                isResizingStart = true;
             }
             else
             {
-                m_isResizingStart = false;
+                isResizingStart = false;
             }
             QLineF line = lineItem->line();
-            if (m_isResizingStart)
+            if (isResizingStart)
             {
-                line.setP1(mapToScene(event->pos()));
+                line.setP1(handlePos);
             }
             else
             {
-                line.setP2(mapToScene(event->pos()));
+                line.setP2(handlePos);
             }
             lineItem->setLine(line);
         }
@@ -63,4 +71,9 @@ void ResizeHandle::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
     QGraphicsEllipseItem::mouseMoveEvent(event);
+}
+
+void ResizeHandle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+    QGraphicsEllipseItem::mouseReleaseEvent(event);
 }

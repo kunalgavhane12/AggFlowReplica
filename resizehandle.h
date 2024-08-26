@@ -12,11 +12,12 @@ public:
     QGraphicsItem* resizeItem() const;
 
 protected:
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
-
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;    
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 private:
     QGraphicsItem *m_resizeItem = nullptr;
-    bool m_isResizingStart;
+    bool isResizingStart;
 };
 
 #endif // RESIZEHANDLE_H

@@ -32,7 +32,6 @@ CustomPixmapItem::CustomPixmapItem(const QPixmap &pixmap, QString name)
     setFlag(ItemIsMovable);
 //    setFlag(ItemIsSelectable);
     setAcceptHoverEvents(true);
-    qDebug() << "IN Pixmap Constructor Name: " <<itemName;
     PixmapLabel->setPixmap(pixmap);
     AddEndCircles();
 }
@@ -55,7 +54,7 @@ void CustomPixmapItem::AddEndCircles()
     layout->addWidget(TextLabel);
     layout->addWidget(PixmapLabel);
     ContainerWidget->setLayout(layout);
-    ContainerWidget->setFixedSize(100,100);
+    ContainerWidget->setFixedSize(64,64);
     ContainerWidget->setAttribute(Qt::WA_TranslucentBackground);
     ProxyWid->setWidget(ContainerWidget);
     TextLabel->setFont(QFont("Arial", 16));
@@ -68,7 +67,7 @@ void CustomPixmapItem::AddEndCircles()
 
     // Update circle positions relative to the group
     QRectF bdRect = boundingRect();
-    StartCircle->setPos(-EndCircle->boundingRect().width(), bdRect.height() / 2);
+    StartCircle->setPos(0, bdRect.height() / 2);
     EndCircle->setPos(bdRect.width(), bdRect.height() / 2);
 
     //    the circles opacity and colour i will adjust later if needed

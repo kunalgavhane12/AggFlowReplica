@@ -31,7 +31,6 @@ public:
     explicit CustomShapeItem(ShapeType shapeType, QGraphicsItem *parent = nullptr);
 
     QRectF boundingRect() const override;
-    QPainterPath shape() const override;
 
     void setShapeRect(const QRectF &rect);
     QRectF getShapeRect() const;
@@ -50,12 +49,6 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    void addHandles();
-    void removeHandles();
-    void updateHandles();
-    HandleType handleAt(const QPointF &point) const;
-    void resizeShape(HandleType handleType, const QPointF &newPos);
-
     ShapeType shapeType;
     QRectF shapeRect;
     QLineF shapeLine;

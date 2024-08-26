@@ -6,8 +6,6 @@
 #include <QGraphicsLineItem>
 #include <QPointF>
 #include <QMap>
-#include <QPolygonF>
-#include <QPainterPath>
 #include "CustomPixmapItem.h"
 #include "arrowlineitem.h"
 #include <QMenu>
@@ -24,6 +22,7 @@
 #include "customshapeitem.h"
 #include <QPen>
 #include <QBrush>
+#include "resizehandle.h"
 
 using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
 
@@ -99,7 +98,7 @@ private:
     QAction *acnResult;
     QUndoStack* UndoStack;
 
-    CustomShapeItem *currentItem1 = nullptr;
+    CustomShapeItem *drawItem = nullptr;
     bool drawing;
     bool selection;
     bool resizing;
@@ -109,69 +108,7 @@ private:
     CustomShapeItem* resizableShapeItem = nullptr;
     QGraphicsEllipseItem* handle = nullptr;
     QList<QGraphicsEllipseItem*> handles;
-    QList<QGraphicsEllipseItem*> endpoints;
 
-    void addBlueHandles(CustomShapeItem* shapeItem)
-    {
-
-        QRectF rect = shapeItem->boundingRect();
-
-        handles.append(addHandleAt(rect.topLeft(), Qt::blue, shapeItem));
-        handles.append(addHandleAt(rect.topRight(), Qt::blue, shapeItem));
-        handles.append(addHandleAt(rect.bottomLeft(), Qt::blue, shapeItem));
-        handles.append(addHandleAt(rect.bottomRight(), Qt::blue, shapeItem));
-    }
-
-    QGraphicsEllipseItem* addHandleAt(const QPointF& position, const QColor& color, QGraphicsItem* parent)
-    {
-        QGraphicsEllipseItem* handle = new QGraphicsEllipseItem(-5, -5, 10, 10, parent);
-        handle->setBrush(QBrush(color));
-        handle->setPen(QPen(color));
-        handle->setPos(position);
-        scene->addItem(handle);
-        return handle;
-    }
-
-
-    void updateHandlesPosition(CustomShapeItem* shapeItem)
-    {
-        if (!shapeItem || handles.isEmpty())
-        {
-            return;
-        }
-        QRectF rect = shapeItem->getShapeRect();
-        handles[0]->setPos(rect.topLeft() - QPointF(3, 3));
-        handles[1]->setPos(rect.topRight() - QPointF(3, 3));
-        handles[2]->setPos(rect.bottomLeft() - QPointF(3, 3));
-        handles[3]->setPos(rect.bottomRight() - QPointF(3, 3));
-    }
-
-    void updateBlueHandles(CustomShapeItem* shapeItem)
-    {
-        if (!shapeItem)
-        {
-            return;
-        }
-
-        QRectF rect = shapeItem->getShapeRect();
-        if (handles.size() == 4)
-        {
-            handles[0]->setPos(rect.topLeft() - QPointF(3, 3));
-            handles[1]->setPos(rect.topRight() - QPointF(3, 3));
-            handles[2]->setPos(rect.bottomLeft() - QPointF(3, 3));
-            handles[3]->setPos(rect.bottomRight() - QPointF(3, 3));
-        }
-    }
-
-    void removeHandles()
-    {
-        for (QGraphicsEllipseItem* h : handles)
-        {
-            scene->removeItem(h);
-            delete h;
-        }
-        handles.clear();
-    }
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H
