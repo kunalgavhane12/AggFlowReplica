@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     createToolbar();
     connectUI();
     graphicsView->setFixedSizeAndScene(QSize(800, 600));
+    graphicsView->setMouseTracking(true);
 
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
@@ -52,8 +53,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     status->setText("<span style='font-size: 16px; font-weight: bold;'>Result : 0</span>");
     statusBar()->addPermanentWidget(status);
-
-
 }
 
 void MainWindow::onClear()

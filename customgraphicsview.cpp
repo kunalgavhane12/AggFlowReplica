@@ -11,8 +11,11 @@
 #include "splitter.h"
 #include "crushingequipment.h"
 #include "adjustpassthroughsurgebin.h"
-#include "powersourcesandauxiliaryequipment.h"
+#include "screeningequipment.h"
+#include "endproduct.h"
+#include "cleanwaterequipment.h"
 #include "measurementequipment.h"
+#include "powersourcesandauxiliaryequipment.h"
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
@@ -29,8 +32,6 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setFixedSizeAndScene(QSize(800, 600));
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    //    scene->setSceneRect(0, 0,600,400);
-    setMouseTracking(true);
 
     acnDel = new QAction(tr("Delete line"), this);
     acnDel->setShortcuts(QKeySequence::Delete);
@@ -232,6 +233,41 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
             {
                 drawItem->setFlag(QGraphicsItem::ItemIsMovable, true);
                 resizableShapeItem = drawItem;
+                QRectF originalRect = resizableShapeItem->boundingRect();
+                QRectF newRect = originalRect;
+
+                QGraphicsEllipseItem* activeHandle = nullptr;
+                for (auto handleItem : handles)
+                {
+                    if (handleItem->contains(mapFromScene(scenePos)))
+                    {
+                        activeHandle = handleItem;
+                        break;
+                    }
+                }
+
+                if (activeHandle)
+                {
+                    if (activeHandle == handles[0]) // Top-left
+                    {
+                        newRect.setTopLeft(scenePos);
+                    }
+                    else if (activeHandle == handles[1]) // Top-right
+                    {
+                        newRect.setTopRight(scenePos);
+                    }
+                    else if (activeHandle == handles[2]) // Bottom-left
+                    {
+                        newRect.setBottomLeft(scenePos);
+                    }
+                    else if (activeHandle == handles[3]) // Bottom-right
+                    {
+                        newRect.setBottomRight(scenePos);
+                    }
+
+                    resizableShapeItem->setShapeRect(newRect);
+                    scene->update();
+                }
             }
         }
     }
@@ -676,14 +712,13 @@ void CustomGraphicsView::onSetValue()
         }
         else if(crushingList.contains(item->GetItemName()))
         {
-            //            CrushingEquipment *crushing = new CrushingEquipment();
-            //                crushing->show();
+            CrushingEquipment *crushing = new CrushingEquipment();
+            crushing->show();
         }
         else if(screeningList.contains(item->GetItemName()))
         {
-            CrushingEquipment *crushing = new CrushingEquipment();
-            //           crushing->setWindowTitle(item->GetItemName());
-            crushing->show();
+            ScreeningEquipment *screen = new ScreeningEquipment();
+            screen->show();
         }
         else if(mobileList.contains(item->GetItemName()))
         {
@@ -694,7 +729,7 @@ void CustomGraphicsView::onSetValue()
         else if(washList.contains(item->GetItemName()))
         {
             CrushingEquipment *crushing = new CrushingEquipment();
-            //           crushing->setWindowTitle(item->GetItemName());
+            crushing->setWindowTitle(item->GetItemName());
             crushing->show();
         }
         else if(inventoryList.contains(item->GetItemName()))
@@ -704,15 +739,13 @@ void CustomGraphicsView::onSetValue()
         }
         else if(endProductList.contains(item->GetItemName()))
         {
-            CrushingEquipment *crushing = new CrushingEquipment();
-            //           crushing->setWindowTitle(item->GetItemName());
-            crushing->show();
+            EndProduct *endProduct = new EndProduct();
+            endProduct->show();
         }
         else if(cleanWaterList.contains(item->GetItemName()))
         {
-            CrushingEquipment *crushing = new CrushingEquipment();
-            //           crushing->setWindowTitle(item->GetItemName());
-            crushing->show();
+            CleanWaterEquipment *cleanWter = new CleanWaterEquipment();
+            cleanWter->show();
         }
         else if(measurementList.contains(item->GetItemName()))
         {

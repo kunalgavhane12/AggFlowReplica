@@ -14,17 +14,20 @@ SOURCES += \
     adjustfeedstream.cpp \
     adjustpassthroughsurgebin.cpp \
     arrowlineitem.cpp \
+    cleanwaterequipment.cpp \
     conveyorcalculation.cpp \
     crushingequipment.cpp \
     customdelegate.cpp \
     customgraphicsview.cpp \
     custompixmapitem.cpp \
     customshapeitem.cpp \
+    endproduct.cpp \
     main.cpp \
     mainwindow.cpp \
     measurementequipment.cpp \
     powersourcesandauxiliaryequipment.cpp \
     resizehandle.cpp \
+    screeningequipment.cpp \
     splitter.cpp \
     userpreferences.cpp
 
@@ -34,16 +37,19 @@ HEADERS += \
     adjustfeedstream.h \
     adjustpassthroughsurgebin.h \
     arrowlineitem.h \
+    cleanwaterequipment.h \
     conveyorcalculation.h \
     crushingequipment.h \
     customdelegate.h \
     customgraphicsview.h \
     custompixmapitem.h \
     customshapeitem.h \
+    endproduct.h \
     mainwindow.h \
     measurementequipment.h \
     powersourcesandauxiliaryequipment.h \
     resizehandle.h \
+    screeningequipment.h \
     splitter.h \
     userpreferences.h
 
@@ -52,11 +58,14 @@ FORMS += \
     adjustfeedstream.ui \
     adjustfeedstreamMultiple.ui \
     adjustpassthroughsurgebin.ui \
+    cleanwaterequipment.ui \
     conveyorcalculation.ui \
     crushingequipment.ui \
+    endproduct.ui \
     mainwindow.ui \
     measurementequipment.ui \
     powersourcesandauxiliaryequipment.ui \
+    screeningequipment.ui \
     splitter.ui \
     userpreferences.ui
 
